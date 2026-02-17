@@ -16,7 +16,7 @@ class QuickActionsRow extends StatelessWidget {
             label: 'Thêm',
             color: AppColors.primary,
             onTap: () {
-              context.push('/add-transaction');
+              context.go('/transactions');
             },
           ),
         ),
@@ -27,7 +27,7 @@ class QuickActionsRow extends StatelessWidget {
             label: 'Thống kê',
             color: AppColors.info,
             onTap: () {
-              context.push('/statistics');
+              context.go('/statistics');
             },
           ),
         ),
@@ -38,7 +38,7 @@ class QuickActionsRow extends StatelessWidget {
             label: 'AI Tư vấn',
             color: AppColors.warning,
             onTap: () {
-              context.push('/ai-advice');
+              context.go('/ai-advice');
             },
           ),
         ),
