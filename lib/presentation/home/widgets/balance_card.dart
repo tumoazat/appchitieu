@@ -61,7 +61,7 @@ class BalanceCard extends ConsumerWidget {
             },
             child: Text(
               CurrencyFormatter.formatVND(stats.balance),
-              key: ValueKey(stats.balance),
+              key: ValueKey(stats.balance.toStringAsFixed(0)),
               style: AppTypography.displayLarge(context).copyWith(
                 color: Colors.white,
                 fontSize: 32,
