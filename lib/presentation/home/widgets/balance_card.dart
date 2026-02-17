@@ -23,8 +23,6 @@ class BalanceCard extends ConsumerWidget {
   }
 
   Widget _buildCard(BuildContext context, MonthlyStats stats) {
-    final balance = stats.totalIncome - stats.totalExpense;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -62,8 +60,8 @@ class BalanceCard extends ConsumerWidget {
               );
             },
             child: Text(
-              CurrencyFormatter.formatVND(balance),
-              key: ValueKey(balance),
+              CurrencyFormatter.formatVND(stats.balance),
+              key: ValueKey(stats.balance),
               style: AppTypography.displayLarge(context).copyWith(
                 color: Colors.white,
                 fontSize: 32,
