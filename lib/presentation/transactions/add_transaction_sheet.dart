@@ -1,0 +1,417 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
+import '../../data/models/transaction_model.dart';
+import '../../core/constants/category_data.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/date_formatter.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/theme/app_colors.dart';
+import '../../providers/transaction_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../shared/gradient_button.dart';
+
+class AddTransactionSheet extends ConsumerStatefulWidget {
+  const AddTransactionSheet({super.key});
+
+  @override
+  ConsumerState<AddTransactionSheet> createState() => _AddTransactionSheetState();
+}
+
+class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
+  TransactionType _type = TransactionType.expense;
+  double _amount = 0;
+  String? _categoryId;
+  DateTime _date = DateTime.now();
+  final TextEditingController _noteController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final categories = CategoryModel.getCategoriesByType(
+      _type == TransactionType.expense ? 'expense' : 'income',
+    );
+
+    if (_categoryId == null && categories.isNotEmpty) {
+      _categoryId = categories.first.id;
+    }
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Drag handle
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  
+                  // Type selector
+                  Center(
+                    child: SizedBox(
+                      width: 240,
+                      height: 40,
+                      child: SegmentedButton<TransactionType>(
+                        segments: const [
+                          ButtonSegment(
+                            value: TransactionType.expense,
+                            label: Text('Chi tiêu'),
+                          ),
+                          ButtonSegment(
+                            value: TransactionType.income,
+                            label: Text('Thu nhập'),
+                          ),
+                        ],
+                        selected: {_type},
+                        onSelectionChanged: (Set<TransactionType> newSelection) {
+                          setState(() {
+                            _type = newSelection.first;
+                            _categoryId = null;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Amount display
+                  Center(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Số tiền',
+                          style: AppTypography.bodyMedium(context),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          CurrencyFormatter.formatVND(_amount),
+                          style: AppTypography.displayLarge(context).copyWith(
+                            color: _type == TransactionType.income
+                                ? Colors.green[600]
+                                : Colors.red[600],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildAmountKeypad(),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Category selector
+                  Text(
+                    'Danh mục',
+                    style: AppTypography.titleMedium(context),
+                  ),
+                  const SizedBox(height: 12),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.85,
+                    ),
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      final isSelected = _categoryId == category.id;
+                      
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            _categoryId = category.id;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: isSelected 
+                                  ? AppColors.primary 
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: category.color.withOpacity(0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    category.emoji,
+                                    style: const TextStyle(fontSize: 24),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                category.name,
+                                style: AppTypography.labelSmall(context),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Date picker
+                  InkWell(
+                    onTap: _selectDate,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            DateFormatter.formatVietnamese(_date),
+                            style: AppTypography.titleMedium(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Note field
+                  TextField(
+                    controller: _noteController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.note),
+                      hintText: 'Thêm ghi chú...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    maxLines: 2,
+                  ),
+                  
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+          
+          // Save button
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Opacity(
+              opacity: _amount > 0 ? 1.0 : 0.5,
+              child: GradientButton(
+                label: 'Lưu giao dịch',
+                onPressed: _amount > 0 ? _saveTransaction : () {},
+                isLoading: _isLoading,
+                width: double.infinity,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAmountKeypad() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildKeypadButton('1'),
+              _buildKeypadButton('2'),
+              _buildKeypadButton('3'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildKeypadButton('4'),
+              _buildKeypadButton('5'),
+              _buildKeypadButton('6'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildKeypadButton('7'),
+              _buildKeypadButton('8'),
+              _buildKeypadButton('9'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildKeypadButton('000'),
+              _buildKeypadButton('0'),
+              _buildKeypadButton('⌫', isDelete: true),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKeypadButton(String value, {bool isDelete = false}) {
+    return InkWell(
+      onTap: () => _onKeypadTap(value, isDelete),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 72,
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isDelete 
+              ? Colors.red.withOpacity(0.1)
+              : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          value,
+          style: AppTypography.titleLarge(context).copyWith(
+            color: isDelete ? Colors.red : null,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onKeypadTap(String value, bool isDelete) {
+    setState(() {
+      if (isDelete) {
+        _amount = (_amount / 10).floor().toDouble();
+      } else {
+        final increment = value == '000' ? 1000 : double.parse(value);
+        _amount = (_amount * 10) + increment;
+      }
+    });
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _date = picked;
+      });
+    }
+  }
+
+  Future<void> _saveTransaction() async {
+    if (_amount <= 0 || _categoryId == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = ref.read(currentUserProvider);
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final transaction = TransactionModel(
+        id: const Uuid().v4(),
+        userId: user.uid,
+        amount: _amount,
+        type: _type,
+        categoryId: _categoryId!,
+        date: _date,
+        note: _noteController.text.isEmpty ? null : _noteController.text,
+        createdAt: DateTime.now(),
+      );
+
+      await ref.read(transactionRepositoryProvider).addTransaction(transaction);
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã lưu giao dịch thành công'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+}
