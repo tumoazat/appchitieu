@@ -41,7 +41,7 @@ class ChartDataPoint {
 
 // Monthly stats provider
 final monthlyStatsProvider = Provider.autoDispose
-    .family<AsyncValue<MonthlyStats>, Map<String, int>>((ref, params) {
+    .family<MonthlyStats, Map<String, int>>((ref, params) {
   final year = params['year']!;
   final month = params['month']!;
 
@@ -73,46 +73,53 @@ final monthlyStatsProvider = Provider.autoDispose
         }
       }
 
-      return AsyncValue.data(MonthlyStats(
+      return MonthlyStats(
         totalIncome: totalIncome,
         totalExpense: totalExpense,
         balance: totalIncome - totalExpense,
         categoryBreakdown: categoryBreakdown,
         categoryCount: categoryCount,
         transactionCount: transactions.length,
-      ));
+      );
     },
-    loading: () => const AsyncValue.loading(),
-    error: (error, stack) => AsyncValue.error(error, stack),
+    loading: () => MonthlyStats(
+      totalIncome: 0,
+      totalExpense: 0,
+      balance: 0,
+      categoryBreakdown: {},
+      categoryCount: {},
+      transactionCount: 0,
+    ),
+    error: (error, stack) => MonthlyStats(
+      totalIncome: 0,
+      totalExpense: 0,
+      balance: 0,
+      categoryBreakdown: {},
+      categoryCount: {},
+      transactionCount: 0,
+    ),
   );
 });
 
 // Pie chart data provider
 final pieChartDataProvider = Provider.autoDispose
     .family<List<ChartDataPoint>, Map<String, int>>((ref, params) {
-  final statsAsync = ref.watch(monthlyStatsProvider(params));
+  final stats = ref.watch(monthlyStatsProvider(params));
+  final List<ChartDataPoint> dataPoints = [];
 
-  return statsAsync.when(
-    data: (stats) {
-      final List<ChartDataPoint> dataPoints = [];
+  stats.categoryBreakdown.forEach((categoryId, amount) {
+    final category = CategoryModel.findById(categoryId);
+    dataPoints.add(ChartDataPoint(
+      label: category?.name ?? 'Khác',
+      value: amount,
+      categoryId: categoryId,
+    ));
+  });
 
-      stats.categoryBreakdown.forEach((categoryId, amount) {
-        final category = CategoryModel.findById(categoryId);
-        dataPoints.add(ChartDataPoint(
-          label: category?.name ?? 'Khác',
-          value: amount,
-          categoryId: categoryId,
-        ));
-      });
+  // Sort by value descending
+  dataPoints.sort((a, b) => b.value.compareTo(a.value));
 
-      // Sort by value descending
-      dataPoints.sort((a, b) => b.value.compareTo(a.value));
-
-      return dataPoints;
-    },
-    loading: () => [],
-    error: (_, __) => [],
-  );
+  return dataPoints;
 });
 
 // Bar chart data provider (daily spending for current month)
@@ -158,48 +165,35 @@ final barChartDataProvider = Provider.autoDispose<List<ChartDataPoint>>((ref) {
 // Top spending category provider
 final topSpendingCategoryProvider = Provider.autoDispose
     .family<String?, Map<String, int>>((ref, params) {
-  final statsAsync = ref.watch(monthlyStatsProvider(params));
+  final stats = ref.watch(monthlyStatsProvider(params));
 
-  return statsAsync.when(
-    data: (stats) {
-      if (stats.categoryBreakdown.isEmpty) return null;
+  if (stats.categoryBreakdown.isEmpty) return null;
 
-      // Find category with highest spending
-      String topCategory = '';
-      double maxAmount = 0;
+  // Find category with highest spending
+  String topCategory = '';
+  double maxAmount = 0;
 
-      stats.categoryBreakdown.forEach((categoryId, amount) {
-        if (amount > maxAmount) {
-          maxAmount = amount;
-          topCategory = categoryId;
-        }
-      });
+  stats.categoryBreakdown.forEach((categoryId, amount) {
+    if (amount > maxAmount) {
+      maxAmount = amount;
+      topCategory = categoryId;
+    }
+  });
 
-      return topCategory;
-    },
-    loading: () => null,
-    error: (_, __) => null,
-  );
+  return topCategory;
 });
 
 // Category spending percentage provider
 final categorySpendingPercentageProvider = Provider.autoDispose
     .family<Map<String, double>, Map<String, int>>((ref, params) {
-  final statsAsync = ref.watch(monthlyStatsProvider(params));
+  final stats = ref.watch(monthlyStatsProvider(params));
+  final Map<String, double> percentages = {};
 
-  return statsAsync.when(
-    data: (stats) {
-      final Map<String, double> percentages = {};
+  if (stats.totalExpense == 0) return percentages;
 
-      if (stats.totalExpense == 0) return percentages;
+  stats.categoryBreakdown.forEach((categoryId, amount) {
+    percentages[categoryId] = (amount / stats.totalExpense) * 100;
+  });
 
-      stats.categoryBreakdown.forEach((categoryId, amount) {
-        percentages[categoryId] = (amount / stats.totalExpense) * 100;
-      });
-
-      return percentages;
-    },
-    loading: () => {},
-    error: (_, __) => {},
-  );
+  return percentages;
 });

@@ -11,15 +11,11 @@ class BalanceCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
-    final monthlyStatsAsync = ref.watch(
+    final stats = ref.watch(
       monthlyStatsProvider({'year': now.year, 'month': now.month}),
     );
 
-    return monthlyStatsAsync.when(
-      data: (stats) => _buildCard(context, stats),
-      loading: () => _buildLoadingCard(context),
-      error: (_, __) => _buildErrorCard(context),
-    );
+    return _buildCard(context, stats);
   }
 
   Widget _buildCard(BuildContext context, MonthlyStats stats) {
@@ -95,52 +91,6 @@ class BalanceCard extends ConsumerWidget {
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadingCard(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 200,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: AppColors.cardGradient,
-      ),
-      child: const Center(
-        child: CircularProgressIndicator(
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorCard(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: AppColors.cardGradient,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Số dư hiện tại',
-            style: AppTypography.bodySmall(context).copyWith(
-              color: Colors.white.withOpacity(0.85),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '₫0',
-            style: AppTypography.displayLarge(context).copyWith(
-              color: Colors.white,
-            ),
           ),
         ],
       ),
