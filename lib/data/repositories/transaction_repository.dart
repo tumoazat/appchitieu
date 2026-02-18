@@ -52,23 +52,23 @@ class TransactionRepository {
     DateTime? endDate,
   }) {
     try {
-      Query query = _getTransactionsCollection(userId)
-          .orderBy('date', descending: true);
-
-      if (startDate != null) {
-        query = query.where('date', 
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
-      }
-
-      if (endDate != null) {
-        query = query.where('date', 
-            isLessThanOrEqualTo: Timestamp.fromDate(endDate));
-      }
-
-      return query.snapshots().map((snapshot) {
-        return snapshot.docs
+      return _getTransactionsCollection(userId)
+          .snapshots()
+          .map((snapshot) {
+        var transactions = snapshot.docs
             .map((doc) => TransactionModel.fromFirestore(doc))
             .toList();
+
+        // Filter client-side to avoid Firestore index requirements
+        transactions = transactions.where((t) {
+          if (startDate != null && t.date.isBefore(startDate)) return false;
+          if (endDate != null && t.date.isAfter(endDate)) return false;
+          return true;
+        }).toList();
+
+        // Sort client-side
+        transactions.sort((a, b) => b.date.compareTo(a.date));
+        return transactions;
       });
     } catch (e) {
       throw Exception('Failed to get transactions: $e');
@@ -82,14 +82,16 @@ class TransactionRepository {
     int month,
   ) {
     try {
-      final startDate = DateTime(year, month, 1);
-      final endDate = DateTime(year, month + 1, 0, 23, 59, 59);
-
-      return getTransactions(
-        userId,
-        startDate: startDate,
-        endDate: endDate,
-      );
+      return _getTransactionsCollection(userId)
+          .snapshots()
+          .map((snapshot) {
+        final transactions = snapshot.docs
+            .map((doc) => TransactionModel.fromFirestore(doc))
+            .where((t) => t.date.year == year && t.date.month == month)
+            .toList();
+        transactions.sort((a, b) => b.date.compareTo(a.date));
+        return transactions;
+      });
     } catch (e) {
       throw Exception('Failed to get transactions by month: $e');
     }
@@ -102,13 +104,13 @@ class TransactionRepository {
   }) {
     try {
       return _getTransactionsCollection(userId)
-          .orderBy('date', descending: true)
-          .limit(limit)
           .snapshots()
           .map((snapshot) {
-        return snapshot.docs
+        final transactions = snapshot.docs
             .map((doc) => TransactionModel.fromFirestore(doc))
             .toList();
+        transactions.sort((a, b) => b.date.compareTo(a.date));
+        return transactions.take(limit).toList();
       });
     } catch (e) {
       throw Exception('Failed to get recent transactions: $e');
@@ -141,24 +143,24 @@ class TransactionRepository {
     DateTime? endDate,
   }) {
     try {
-      Query query = _getTransactionsCollection(userId)
+      return _getTransactionsCollection(userId)
           .where('categoryId', isEqualTo: categoryId)
-          .orderBy('date', descending: true);
-
-      if (startDate != null) {
-        query = query.where('date',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
-      }
-
-      if (endDate != null) {
-        query = query.where('date',
-            isLessThanOrEqualTo: Timestamp.fromDate(endDate));
-      }
-
-      return query.snapshots().map((snapshot) {
-        return snapshot.docs
+          .snapshots()
+          .map((snapshot) {
+        var transactions = snapshot.docs
             .map((doc) => TransactionModel.fromFirestore(doc))
             .toList();
+
+        // Filter client-side
+        transactions = transactions.where((t) {
+          if (startDate != null && t.date.isBefore(startDate)) return false;
+          if (endDate != null && t.date.isAfter(endDate)) return false;
+          return true;
+        }).toList();
+
+        // Sort client-side
+        transactions.sort((a, b) => b.date.compareTo(a.date));
+        return transactions;
       });
     } catch (e) {
       throw Exception('Failed to get transactions by category: $e');

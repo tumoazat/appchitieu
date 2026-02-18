@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../providers/transaction_provider.dart';
 import '../../../providers/statistics_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -11,14 +12,50 @@ class BalanceCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
-    final stats = ref.watch(
-      monthlyStatsProvider({'year': now.year, 'month': now.month}),
+    final monthKey = '${now.year}-${now.month}';
+    final transactionsAsync = ref.watch(
+      transactionsStreamProvider(monthKey),
     );
 
-    return _buildCard(context, stats);
+    return transactionsAsync.when(
+      data: (transactions) {
+        double totalIncome = 0;
+        double totalExpense = 0;
+
+        for (var transaction in transactions) {
+          if (transaction.isIncome) {
+            totalIncome += transaction.amount;
+          } else {
+            totalExpense += transaction.amount;
+          }
+        }
+
+        final balance = totalIncome - totalExpense;
+
+        return _buildCard(context, balance, totalIncome, totalExpense);
+      },
+      loading: () {
+        return _buildCard(context, 0, 0, 0, isLoading: true);
+      },
+      error: (error, stack) {
+        // Fallback: try to use monthlyStatsProvider
+        final stats = ref.watch(
+          monthlyStatsProvider(monthKey),
+        );
+        return _buildCard(
+          context, stats.balance, stats.totalIncome, stats.totalExpense,
+        );
+      },
+    );
   }
 
-  Widget _buildCard(BuildContext context, MonthlyStats stats) {
+  Widget _buildCard(
+    BuildContext context,
+    double balance,
+    double totalIncome,
+    double totalExpense, {
+    bool isLoading = false,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -47,7 +84,16 @@ class BalanceCard extends ConsumerWidget {
           const SizedBox(height: 8),
           
           // Balance amount with animation
-          AnimatedSwitcher(
+          isLoading
+              ? const SizedBox(
+                  height: 40,
+                  width: 40,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             transitionBuilder: (child, animation) {
               return FadeTransition(
@@ -56,8 +102,8 @@ class BalanceCard extends ConsumerWidget {
               );
             },
             child: Text(
-              CurrencyFormatter.formatVND(stats.balance),
-              key: ValueKey(stats.balance.toStringAsFixed(0)),
+              CurrencyFormatter.formatVND(balance),
+              key: ValueKey(balance.toStringAsFixed(0)),
               style: AppTypography.displayLarge(context).copyWith(
                 color: Colors.white,
                 fontSize: 32,
@@ -75,7 +121,7 @@ class BalanceCard extends ConsumerWidget {
                 child: _StatBox(
                   icon: Icons.arrow_downward,
                   label: 'Thu nhập',
-                  amount: stats.totalIncome,
+                  amount: totalIncome,
                   iconColor: Colors.greenAccent,
                 ),
               ),
@@ -86,7 +132,7 @@ class BalanceCard extends ConsumerWidget {
                 child: _StatBox(
                   icon: Icons.arrow_upward,
                   label: 'Chi tiêu',
-                  amount: stats.totalExpense,
+                  amount: totalExpense,
                   iconColor: Colors.redAccent,
                 ),
               ),

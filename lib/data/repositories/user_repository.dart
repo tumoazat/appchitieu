@@ -43,9 +43,19 @@ class UserRepository {
   }
 
   // Update budget
-  Future<void> updateBudget(String uid, double budget) async {
+  Future<void> updateBudget(String uid, double budget, {String? displayName, String? email}) async {
     try {
-      await _usersCollection.doc(uid).update({'monthlyBudget': budget});
+      final data = <String, dynamic>{
+        'monthlyBudget': budget,
+      };
+      // Also save basic info to ensure doc has required fields
+      if (displayName != null) data['displayName'] = displayName;
+      if (email != null) data['email'] = email;
+      
+      await _usersCollection.doc(uid).set(
+        data,
+        SetOptions(merge: true),
+      );
     } catch (e) {
       throw Exception('Failed to update budget: $e');
     }
@@ -54,7 +64,10 @@ class UserRepository {
   // Update profile
   Future<void> updateProfile(String uid, Map<String, dynamic> data) async {
     try {
-      await _usersCollection.doc(uid).update(data);
+      await _usersCollection.doc(uid).set(
+        data,
+        SetOptions(merge: true),
+      );
     } catch (e) {
       throw Exception('Failed to update profile: $e');
     }
@@ -63,7 +76,10 @@ class UserRepository {
   // Update photo URL
   Future<void> updatePhotoUrl(String uid, String photoUrl) async {
     try {
-      await _usersCollection.doc(uid).update({'photoUrl': photoUrl});
+      await _usersCollection.doc(uid).set(
+        {'photoUrl': photoUrl},
+        SetOptions(merge: true),
+      );
     } catch (e) {
       throw Exception('Failed to update photo URL: $e');
     }

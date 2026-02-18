@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../providers/user_provider.dart';
+import '../../../providers/notification_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/greeting_helper.dart';
+import '../../notifications/notification_screen.dart';
 
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
@@ -87,13 +89,51 @@ class HomeHeader extends ConsumerWidget {
               width: 1,
             ),
           ),
-          child: IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            iconSize: 22,
-            onPressed: () {
-              // TODO: Navigate to notifications
-            },
-            color: Theme.of(context).colorScheme.onSurface,
+          child: Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                iconSize: 22,
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationScreen(),
+                    ),
+                  );
+                },
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              // Badge for unread notifications
+              Consumer(
+                builder: (context, ref, _) {
+                  final unreadCount =
+                      ref.watch(unreadNotificationCountProvider);
+                  if (unreadCount == 0) return const SizedBox.shrink();
+                  return Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          unreadCount > 9 ? '9+' : '$unreadCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ],

@@ -1,5 +1,5 @@
 import 'package:intl/intl.dart';
-import 'app_constants.dart';
+import '../constants/app_constants.dart';
 
 class CurrencyFormatter {
   // Format VND currency with Vietnamese style (dot separator for thousands)

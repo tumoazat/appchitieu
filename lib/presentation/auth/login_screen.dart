@@ -5,6 +5,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../data/models/user_model.dart';
 import '../shared/gradient_button.dart';
 import 'widgets/auth_text_field.dart';
 import 'widgets/social_login_button.dart';
@@ -60,10 +62,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       final authRepository = ref.read(authRepositoryProvider);
-      await authRepository.signInWithEmail(
+      final credential = await authRepository.signInWithEmail(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+
+      // Ensure user document exists in Firestore
+      if (credential.user != null) {
+        final userRepo = ref.read(userRepositoryProvider);
+        final exists = await userRepo.userExists(credential.user!.uid);
+        if (!exists) {
+          await userRepo.createUser(UserModel(
+            uid: credential.user!.uid,
+            displayName: credential.user!.displayName ?? 'Người dùng',
+            email: credential.user!.email ?? '',
+            createdAt: DateTime.now(),
+          ));
+        }
+      }
 
       if (mounted) {
         context.go('/home');
@@ -93,7 +109,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       final authRepository = ref.read(authRepositoryProvider);
-      await authRepository.signInWithGoogle();
+      final credential = await authRepository.signInWithGoogle();
+
+      // Ensure user document exists in Firestore
+      if (credential.user != null) {
+        final userRepo = ref.read(userRepositoryProvider);
+        final exists = await userRepo.userExists(credential.user!.uid);
+        if (!exists) {
+          await userRepo.createUser(UserModel(
+            uid: credential.user!.uid,
+            displayName: credential.user!.displayName ?? 'Người dùng',
+            email: credential.user!.email ?? '',
+            photoUrl: credential.user!.photoURL,
+            createdAt: DateTime.now(),
+          ));
+        }
+      }
 
       if (mounted) {
         context.go('/home');

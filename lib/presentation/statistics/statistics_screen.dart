@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_typography.dart';
 import '../../providers/statistics_provider.dart';
-import '../shared/loading_shimmer.dart';
 import '../shared/empty_state.dart';
 import '../../core/utils/currency_formatter.dart';
 import 'widgets/pie_chart_section.dart';
@@ -16,8 +15,8 @@ class StatisticsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
-    final params = {'year': now.year, 'month': now.month};
-    final stats = ref.watch(monthlyStatsProvider(params));
+    final monthKey = '${now.year}-${now.month}';
+    final stats = ref.watch(monthlyStatsProvider(monthKey));
 
     return SafeArea(
       child: Padding(
@@ -86,8 +85,8 @@ class StatisticsScreen extends ConsumerWidget {
                     const SizedBox(height: 24),
 
                     // Category Breakdown
-                    if (stats.categoryBreakdown.isNotEmpty) ...[
-                      CategoryBreakdown(params: params),
+                    if (stats.categoryBreakdown.isNotEmpty) ...[                    
+                      CategoryBreakdown(monthKey: monthKey),
                       const SizedBox(height: 24),
                     ],
 

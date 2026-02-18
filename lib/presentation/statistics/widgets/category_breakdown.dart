@@ -6,64 +6,58 @@ import '../../../core/constants/category_data.dart';
 import '../../../providers/statistics_provider.dart';
 
 class CategoryBreakdown extends ConsumerWidget {
-  final Map<String, int> params;
+  final String monthKey;
 
   const CategoryBreakdown({
     super.key,
-    required this.params,
+    required this.monthKey,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(monthlyStatsProvider(params));
-    final percentages = ref.watch(categorySpendingPercentageProvider(params));
+    final stats = ref.watch(monthlyStatsProvider(monthKey));
+    final percentages = ref.watch(categorySpendingPercentageProvider(monthKey));
 
-    return statsAsync.when(
-      data: (stats) {
-        if (stats.categoryBreakdown.isEmpty) {
-          return const SizedBox.shrink();
-        }
+    if (stats.categoryBreakdown.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-        // Sort categories by amount descending
-        final sortedCategories = stats.categoryBreakdown.entries.toList()
-          ..sort((a, b) => b.value.compareTo(a.value));
+    // Sort categories by amount descending
+    final sortedCategories = stats.categoryBreakdown.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Phân tích chi tiêu',
-                  style: AppTypography.headlineMedium(context),
-                ),
-                const SizedBox(height: 16),
-                
-                ...sortedCategories.map((entry) {
-                  final categoryId = entry.key;
-                  final amount = entry.value;
-                  final category = CategoryModel.findById(categoryId);
-                  final percentage = percentages[categoryId] ?? 0;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _CategoryItem(
-                      emoji: category?.emoji ?? '📦',
-                      name: category?.name ?? 'Khác',
-                      amount: amount,
-                      percentage: percentage,
-                      color: category?.color ?? Colors.grey,
-                    ),
-                  );
-                }),
-              ],
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Phân tích chi tiêu',
+              style: AppTypography.headlineMedium(context),
             ),
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+            const SizedBox(height: 16),
+            
+            ...sortedCategories.map((entry) {
+              final categoryId = entry.key;
+              final amount = entry.value;
+              final category = CategoryModel.findById(categoryId);
+              final percentage = percentages[categoryId] ?? 0;
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _CategoryItem(
+                  emoji: category?.emoji ?? '📦',
+                  name: category?.name ?? 'Khác',
+                  amount: amount,
+                  percentage: percentage,
+                  color: category?.color ?? Colors.grey,
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
     );
   }
 }

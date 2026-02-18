@@ -25,12 +25,14 @@ class UserModel {
     
     return UserModel(
       uid: doc.id,
-      displayName: data['displayName'] as String,
-      email: data['email'] as String,
+      displayName: (data['displayName'] as String?) ?? 'Người dùng',
+      email: (data['email'] as String?) ?? '',
       photoUrl: data['photoUrl'] as String?,
-      monthlyBudget: (data['monthlyBudget'] as num?)?.toDouble() ?? 10000000,
-      currency: data['currency'] as String? ?? 'VND',
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      monthlyBudget: (data['monthlyBudget'] as num?)?.toDouble() ?? 0,
+      currency: (data['currency'] as String?) ?? 'VND',
+      createdAt: data['createdAt'] != null
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
     );
   }
 

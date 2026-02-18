@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:timezone/timezone.dart' as tz;
 import '../../core/constants/app_constants.dart';
 
 class NotificationService {
@@ -116,9 +117,9 @@ class NotificationService {
   }
 
   // Get next instance of 9 PM
-  DateTime _nextInstanceOf9PM() {
-    final now = DateTime.now();
-    var scheduledDate = DateTime(now.year, now.month, now.day, 21, 0);
+  tz.TZDateTime _nextInstanceOf9PM() {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 21, 0);
     
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
@@ -21,7 +22,7 @@ class ProfileScreen extends ConsumerWidget {
     // Get transaction count
     final now = DateTime.now();
     final transactionsAsync = ref.watch(
-      transactionsStreamProvider({'year': now.year, 'month': now.month}),
+      transactionsStreamProvider('${now.year}-${now.month}'),
     );
     final transactionCount = transactionsAsync.when(
       data: (transactions) => transactions.length.toString(),
@@ -129,9 +130,7 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 // Edit profile button
                 TextButton(
-                  onPressed: () {
-                    // Navigate to edit profile
-                  },
+                  onPressed: () => _showEditProfileDialog(context, ref),
                   child: const Text('Chỉnh sửa hồ sơ'),
                 ),
                 const SizedBox(height: 24),
@@ -191,7 +190,7 @@ class ProfileScreen extends ConsumerWidget {
                       onToggle: (value) {
                         ref
                             .read(themeModeProvider.notifier)
-                            .toggleDarkMode(value);
+                            .toggleTheme();
                       },
                     ),
                     SettingsItem(
@@ -286,6 +285,96 @@ class ProfileScreen extends ConsumerWidget {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  void _showEditProfileDialog(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    final currentUser = ref.read(currentUserProvider);
+    final userProfileAsync = ref.read(userProfileProvider);
+
+    // Pre-fill with current data
+    userProfileAsync.whenData((userProfile) {
+      nameController.text = userProfile?.displayName ?? 
+          currentUser?.displayName ?? '';
+    });
+    if (nameController.text.isEmpty) {
+      nameController.text = currentUser?.displayName ?? '';
+    }
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Chỉnh sửa hồ sơ'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Tên hiển thị',
+                prefixIcon: Icon(Icons.person),
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              enabled: false,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                prefixIcon: const Icon(Icons.email),
+                hintText: currentUser?.email ?? '',
+              ),
+              controller: TextEditingController(text: currentUser?.email ?? ''),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (newName.isNotEmpty && currentUser != null) {
+                try {
+                  final repo = ref.read(userRepositoryProvider);
+                  await repo.updateProfile(currentUser.uid, {
+                    'displayName': newName,
+                    'email': currentUser.email ?? '',
+                    'createdAt': FieldValue.serverTimestamp(),
+                  });
+                  // Also update Firebase Auth display name
+                  await currentUser.updateDisplayName(newName);
+                  // Force refresh user profile
+                  ref.invalidate(userProfileProvider);
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã cập nhật hồ sơ'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Lỗi: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+            child: const Text('Lưu'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showBudgetDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
     final userProfileAsync = ref.read(userProfileProvider);
@@ -317,9 +406,18 @@ class ProfileScreen extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               final budget = double.tryParse(controller.text);
-              if (budget != null) {
+              if (budget != null && budget > 0) {
                 try {
-                  await ref.read(updateBudgetProvider(budget).future);
+                  final user = ref.read(currentUserProvider);
+                  final repo = ref.read(userRepositoryProvider);
+                  await repo.updateBudget(
+                    user!.uid, 
+                    budget,
+                    displayName: user.displayName ?? 'Người dùng',
+                    email: user.email ?? '',
+                  );
+                  // Force refresh user profile
+                  ref.invalidate(userProfileProvider);
                   if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(

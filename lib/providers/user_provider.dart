@@ -17,6 +17,21 @@ final userProfileProvider = StreamProvider.autoDispose<UserModel?>((ref) {
   }
 
   final repository = ref.watch(userRepositoryProvider);
+  
+  // Auto-create Firestore doc if it doesn't exist
+  repository.userExists(user.uid).then((exists) async {
+    if (!exists) {
+      await repository.createUser(UserModel(
+        uid: user.uid,
+        displayName: user.displayName ?? 'Người dùng',
+        email: user.email ?? '',
+        photoUrl: user.photoURL,
+        createdAt: DateTime.now(),
+      ));
+    }
+  });
+
+  ref.keepAlive();
   return repository.getUser(user.uid);
 });
 

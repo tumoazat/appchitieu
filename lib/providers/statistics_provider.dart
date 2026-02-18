@@ -40,13 +40,11 @@ class ChartDataPoint {
 }
 
 // Monthly stats provider
+// Key format: "year-month" e.g. "2026-2"
 final monthlyStatsProvider = Provider.autoDispose
-    .family<MonthlyStats, Map<String, int>>((ref, params) {
-  final year = params['year']!;
-  final month = params['month']!;
-
+    .family<MonthlyStats, String>((ref, monthKey) {
   final transactionsAsync = ref.watch(
-    transactionsStreamProvider({'year': year, 'month': month}),
+    transactionsStreamProvider(monthKey),
   );
 
   return transactionsAsync.when(
@@ -103,8 +101,8 @@ final monthlyStatsProvider = Provider.autoDispose
 
 // Pie chart data provider
 final pieChartDataProvider = Provider.autoDispose
-    .family<List<ChartDataPoint>, Map<String, int>>((ref, params) {
-  final stats = ref.watch(monthlyStatsProvider(params));
+    .family<List<ChartDataPoint>, String>((ref, monthKey) {
+  final stats = ref.watch(monthlyStatsProvider(monthKey));
   final List<ChartDataPoint> dataPoints = [];
 
   stats.categoryBreakdown.forEach((categoryId, amount) {
@@ -126,7 +124,7 @@ final pieChartDataProvider = Provider.autoDispose
 final barChartDataProvider = Provider.autoDispose<List<ChartDataPoint>>((ref) {
   final now = DateTime.now();
   final transactionsAsync = ref.watch(
-    transactionsStreamProvider({'year': now.year, 'month': now.month}),
+    transactionsStreamProvider('${now.year}-${now.month}'),
   );
 
   return transactionsAsync.when(
@@ -164,8 +162,8 @@ final barChartDataProvider = Provider.autoDispose<List<ChartDataPoint>>((ref) {
 
 // Top spending category provider
 final topSpendingCategoryProvider = Provider.autoDispose
-    .family<String?, Map<String, int>>((ref, params) {
-  final stats = ref.watch(monthlyStatsProvider(params));
+    .family<String?, String>((ref, monthKey) {
+  final stats = ref.watch(monthlyStatsProvider(monthKey));
 
   if (stats.categoryBreakdown.isEmpty) return null;
 
@@ -185,8 +183,8 @@ final topSpendingCategoryProvider = Provider.autoDispose
 
 // Category spending percentage provider
 final categorySpendingPercentageProvider = Provider.autoDispose
-    .family<Map<String, double>, Map<String, int>>((ref, params) {
-  final stats = ref.watch(monthlyStatsProvider(params));
+    .family<Map<String, double>, String>((ref, monthKey) {
+  final stats = ref.watch(monthlyStatsProvider(monthKey));
   final Map<String, double> percentages = {};
 
   if (stats.totalExpense == 0) return percentages;

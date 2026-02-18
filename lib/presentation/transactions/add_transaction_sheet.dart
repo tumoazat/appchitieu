@@ -9,6 +9,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../shared/gradient_button.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
@@ -424,6 +425,17 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         );
 
         await ref.read(transactionRepositoryProvider).addTransaction(transaction);
+
+        // Add notification
+        final category = CategoryModel.findById(_categoryId!);
+        final categoryName = category?.name ?? 'Khác';
+        if (_type == TransactionType.income) {
+          ref.read(notificationProvider.notifier)
+              .addIncomeNotification(_amount, categoryName);
+        } else {
+          ref.read(notificationProvider.notifier)
+              .addExpenseNotification(_amount, categoryName);
+        }
       }
 
       if (mounted) {

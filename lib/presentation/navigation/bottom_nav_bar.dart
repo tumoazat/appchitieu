@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/theme/app_typography.dart';
 
 class BottomNavBar extends ConsumerWidget {
   const BottomNavBar({super.key});
@@ -14,7 +13,7 @@ class BottomNavBar extends ConsumerWidget {
     final inactiveColor = Colors.grey;
 
     return Container(
-      height: 64,
+      height: 72,
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         boxShadow: [
@@ -26,7 +25,7 @@ class BottomNavBar extends ConsumerWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -102,19 +101,19 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
               color: color,
-              size: 24,
+              size: 22,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
-              style: AppTypography.labelSmall(context).copyWith(color: color),
+              style: TextStyle(fontSize: 10, color: color),
             ),
           ],
         ),

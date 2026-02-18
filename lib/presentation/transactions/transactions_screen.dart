@@ -27,10 +27,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(
-      transactionsStreamProvider({
-        'year': _selectedDate.year,
-        'month': _selectedDate.month,
-      }),
+      transactionsStreamProvider(
+        '${_selectedDate.year}-${_selectedDate.month}',
+      ),
     );
 
     return Scaffold(

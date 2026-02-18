@@ -11,9 +11,8 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    debugPrint('✅ Firebase initialized successfully');
-  } catch (e) {
-    debugPrint('⚠️ Firebase initialization error: $e');
+  } catch (_) {
+    // Firebase may already be initialized by native plugin
   }
 
   runApp(const ProviderScope(child: SmartExpenseApp()));
