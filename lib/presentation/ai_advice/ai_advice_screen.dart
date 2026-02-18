@@ -6,84 +6,15 @@ import '../../providers/user_provider.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
-import '../shared/gradient_button.dart';
 import '../shared/loading_shimmer.dart';
 import 'widgets/advice_card.dart';
 import 'widgets/budget_progress.dart';
 
-class AiAdviceScreen extends ConsumerStatefulWidget {
+class AiAdviceScreen extends ConsumerWidget {
   const AiAdviceScreen({super.key});
 
   @override
-  ConsumerState<AiAdviceScreen> createState() => _AiAdviceScreenState();
-}
-
-class _AiAdviceScreenState extends ConsumerState<AiAdviceScreen> {
-  bool _isAnalyzing = false;
-  List<AdviceItem> _advices = [];
-  final _aiService = AiAdviceService();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _analyzeTransactions();
-    });
-  }
-
-  Future<void> _analyzeTransactions() async {
-    setState(() {
-      _isAnalyzing = true;
-    });
-
-    try {
-      final now = DateTime.now();
-      final transactionsAsync = ref.read(
-        transactionsStreamProvider({'year': now.year, 'month': now.month}),
-      );
-
-      final monthlyBudget = ref.read(monthlyBudgetProvider);
-
-      transactionsAsync.when(
-        data: (transactions) async {
-          final advices = await _aiService.analyzeTransactions(
-            transactions: transactions,
-            monthlyBudget: monthlyBudget,
-          );
-
-          if (mounted) {
-            setState(() {
-              _advices = advices;
-              _isAnalyzing = false;
-            });
-          }
-        },
-        loading: () {
-          if (mounted) {
-            setState(() {
-              _isAnalyzing = false;
-            });
-          }
-        },
-        error: (error, stack) {
-          if (mounted) {
-            setState(() {
-              _isAnalyzing = false;
-            });
-          }
-        },
-      );
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isAnalyzing = false;
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
     final transactionsAsync = ref.watch(
       transactionsStreamProvider({'year': now.year, 'month': now.month}),
@@ -102,81 +33,82 @@ class _AiAdviceScreenState extends ConsumerState<AiAdviceScreen> {
                 (sum, t) => sum + t.amount,
               );
 
-              if (_isAnalyzing) {
-                return _buildLoadingState();
-              }
-
               if (transactions.isEmpty) {
-                return _buildEmptyState();
+                return _buildEmptyState(context);
               }
 
-              return SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: AppConstants.spacingLg),
-                    
-                    // Title
-                    Text(
-                      '🤖 AI Tư Vấn Tài Chính',
-                      style: AppTypography.headlineLarge(context),
-                    ),
-                    
-                    const SizedBox(height: AppConstants.spacingLg),
-                    
-                    // AI Status Card
-                    _buildAiStatusCard(context),
-                    
-                    const SizedBox(height: AppConstants.spacingLg),
-                    
-                    // Budget Progress
-                    BudgetProgress(
-                      spent: totalExpense,
-                      budget: monthlyBudget,
-                    ),
-                    
-                    const SizedBox(height: AppConstants.spacingLg),
-                    
-                    // Advice Cards
-                    if (_advices.isNotEmpty)
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _advices.length,
-                        itemBuilder: (context, index) {
-                          return AdviceCard(
-                            advice: _advices[index],
-                            index: index,
-                          );
-                        },
-                      )
-                    else
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppConstants.spacingXl),
-                          child: Text(
-                            'Thêm giao dịch để nhận lời khuyên',
-                            style: AppTypography.bodyMedium(context),
-                          ),
-                        ),
-                      ),
-                    
-                    const SizedBox(height: AppConstants.spacingLg),
-                    
-                    // Reanalyze Button
-                    GradientButton(
-                      label: '✨ Phân tích lại',
-                      onPressed: _analyzeTransactions,
-                      width: double.infinity,
-                    ),
-                    
-                    const SizedBox(height: AppConstants.spacingXl),
-                  ],
+              // Compute advices directly using AI service
+              final aiService = AiAdviceService();
+              
+              return FutureBuilder<List<AdviceItem>>(
+                future: aiService.analyzeTransactions(
+                  transactions: transactions,
+                  monthlyBudget: monthlyBudget,
                 ),
+                builder: (context, snapshot) {
+                  final advices = snapshot.data ?? [];
+                  final isAnalyzing = snapshot.connectionState == ConnectionState.waiting;
+
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: AppConstants.spacingLg),
+                        
+                        // Title
+                        Text(
+                          '🤖 AI Tư Vấn Tài Chính',
+                          style: AppTypography.headlineLarge(context),
+                        ),
+                        
+                        const SizedBox(height: AppConstants.spacingLg),
+                        
+                        // AI Status Card
+                        _buildAiStatusCard(context, isAnalyzing),
+                        
+                        const SizedBox(height: AppConstants.spacingLg),
+                        
+                        // Budget Progress
+                        BudgetProgress(
+                          spent: totalExpense,
+                          budget: monthlyBudget,
+                        ),
+                        
+                        const SizedBox(height: AppConstants.spacingLg),
+                        
+                        // Advice Cards
+                        if (advices.isNotEmpty)
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: advices.length,
+                            itemBuilder: (context, index) {
+                              return AdviceCard(
+                                advice: advices[index],
+                                index: index,
+                              );
+                            },
+                          )
+                        else if (!isAnalyzing)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppConstants.spacingXl),
+                              child: Text(
+                                'Thêm giao dịch để nhận lời khuyên',
+                                style: AppTypography.bodyMedium(context),
+                              ),
+                            ),
+                          ),
+                        
+                        const SizedBox(height: AppConstants.spacingXl),
+                      ],
+                    ),
+                  );
+                },
               );
             },
-            loading: () => _buildLoadingState(),
+            loading: () => _buildLoadingState(context),
             error: (error, stack) => Center(
               child: Text(
                 'Có lỗi xảy ra',
@@ -189,7 +121,7 @@ class _AiAdviceScreenState extends ConsumerState<AiAdviceScreen> {
     );
   }
 
-  Widget _buildAiStatusCard(BuildContext context) {
+  Widget _buildAiStatusCard(BuildContext context, bool isAnalyzing) {
     return Container(
       decoration: BoxDecoration(
         gradient: AppColors.primaryGradient,
@@ -234,7 +166,7 @@ class _AiAdviceScreenState extends ConsumerState<AiAdviceScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _isAnalyzing
+                  isAnalyzing
                       ? 'Đang phân tích chi tiêu...'
                       : 'Phân tích hoàn tất',
                   style: TextStyle(
@@ -245,7 +177,7 @@ class _AiAdviceScreenState extends ConsumerState<AiAdviceScreen> {
               ],
             ),
           ),
-          if (_isAnalyzing)
+          if (isAnalyzing)
             const SizedBox(
               width: 24,
               height: 24,
@@ -259,7 +191,7 @@ class _AiAdviceScreenState extends ConsumerState<AiAdviceScreen> {
     );
   }
 
-  Widget _buildLoadingState() {
+  Widget _buildLoadingState(BuildContext context) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
@@ -296,14 +228,14 @@ class _AiAdviceScreenState extends ConsumerState<AiAdviceScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
+          const Text(
             '🤖',
-            style: const TextStyle(fontSize: 80),
+            style: TextStyle(fontSize: 80),
           ),
           const SizedBox(height: AppConstants.spacingLg),
           Text(

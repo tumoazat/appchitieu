@@ -12,19 +12,38 @@ import '../../providers/auth_provider.dart';
 import '../shared/gradient_button.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
-  const AddTransactionSheet({super.key});
+  final TransactionModel? editTransaction;
+  
+  const AddTransactionSheet({super.key, this.editTransaction});
 
   @override
   ConsumerState<AddTransactionSheet> createState() => _AddTransactionSheetState();
 }
 
 class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
-  TransactionType _type = TransactionType.expense;
-  double _amount = 0;
+  late TransactionType _type;
+  late double _amount;
   String? _categoryId;
-  DateTime _date = DateTime.now();
+  late DateTime _date;
   final TextEditingController _noteController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with edit transaction data if provided
+    if (widget.editTransaction != null) {
+      _type = widget.editTransaction!.type;
+      _amount = widget.editTransaction!.amount;
+      _categoryId = widget.editTransaction!.categoryId;
+      _date = widget.editTransaction!.date;
+      _noteController.text = widget.editTransaction!.note ?? '';
+    } else {
+      _type = TransactionType.expense;
+      _amount = 0;
+      _date = DateTime.now();
+    }
+  }
 
   @override
   void dispose() {
@@ -251,7 +270,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             child: Opacity(
               opacity: _amount > 0 ? 1.0 : 0.5,
               child: GradientButton(
-                label: 'Lưu giao dịch',
+                label: widget.editTransaction != null ? 'Cập nhật giao dịch' : 'Lưu giao dịch',
                 onPressed: _amount > 0 ? _saveTransaction : () {},
                 isLoading: _isLoading,
                 width: double.infinity,
@@ -375,24 +394,43 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         throw Exception('User not authenticated');
       }
 
-      final transaction = TransactionModel(
-        id: const Uuid().v4(),
-        userId: user.uid,
-        amount: _amount,
-        type: _type,
-        categoryId: _categoryId!,
-        date: _date,
-        note: _noteController.text.isEmpty ? null : _noteController.text,
-        createdAt: DateTime.now(),
-      );
+      final isEditing = widget.editTransaction != null;
+      
+      if (isEditing) {
+        // Update existing transaction
+        final updatedTransaction = TransactionModel(
+          id: widget.editTransaction!.id,
+          userId: user.uid,
+          amount: _amount,
+          type: _type,
+          categoryId: _categoryId!,
+          date: _date,
+          note: _noteController.text.isEmpty ? null : _noteController.text,
+          createdAt: widget.editTransaction!.createdAt,
+        );
 
-      await ref.read(transactionRepositoryProvider).addTransaction(transaction);
+        await ref.read(transactionRepositoryProvider).updateTransaction(updatedTransaction);
+      } else {
+        // Create new transaction
+        final transaction = TransactionModel(
+          id: const Uuid().v4(),
+          userId: user.uid,
+          amount: _amount,
+          type: _type,
+          categoryId: _categoryId!,
+          date: _date,
+          note: _noteController.text.isEmpty ? null : _noteController.text,
+          createdAt: DateTime.now(),
+        );
+
+        await ref.read(transactionRepositoryProvider).addTransaction(transaction);
+      }
 
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã lưu giao dịch thành công'),
+          SnackBar(
+            content: Text(isEditing ? 'Đã cập nhật giao dịch thành công' : 'Đã lưu giao dịch thành công'),
             backgroundColor: Colors.green,
           ),
         );

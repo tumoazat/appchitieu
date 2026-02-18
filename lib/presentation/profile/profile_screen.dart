@@ -1,67 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/transaction_provider.dart';
 import 'widgets/settings_section.dart';
-
-// Placeholder providers - these should be properly implemented in your app
-final userProfileProvider = Provider<UserProfile>((ref) {
-  return UserProfile(
-    name: 'Người dùng',
-    email: 'user@example.com',
-    photoUrl: null,
-  );
-});
-
-final themeModeProvider =
-    StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
-  return ThemeModeNotifier();
-});
-
-final signOutProvider = Provider<Future<void> Function()>((ref) {
-  return () async {
-    // Implement sign out logic
-  };
-});
-
-final updateBudgetProvider = Provider<Future<void> Function(double)>((ref) {
-  return (budget) async {
-    // Implement budget update logic
-  };
-});
-
-class UserProfile {
-  final String name;
-  final String email;
-  final String? photoUrl;
-
-  UserProfile({
-    required this.name,
-    required this.email,
-    this.photoUrl,
-  });
-}
-
-class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  ThemeModeNotifier() : super(ThemeMode.system);
-
-  void setThemeMode(ThemeMode mode) {
-    state = mode;
-  }
-
-  void toggleDarkMode(bool isDark) {
-    state = isDark ? ThemeMode.dark : ThemeMode.light;
-  }
-}
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userProfileProvider);
+    final currentUser = ref.watch(currentUserProvider);
+    final userProfileAsync = ref.watch(userProfileProvider);
     final themeMode = ref.watch(themeModeProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
+
+    // Get transaction count
+    final now = DateTime.now();
+    final transactionsAsync = ref.watch(
+      transactionsStreamProvider({'year': now.year, 'month': now.month}),
+    );
+    final transactionCount = transactionsAsync.when(
+      data: (transactions) => transactions.length.toString(),
+      loading: () => '...',
+      error: (_, __) => '0',
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -76,53 +42,89 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 const SizedBox(height: 24),
                 // Header section
-                Column(
-                  children: [
-                    Stack(
+                userProfileAsync.when(
+                  data: (userProfile) {
+                    final displayName = userProfile?.displayName ?? 
+                                       currentUser?.displayName ?? 
+                                       'Người dùng';
+                    final email = userProfile?.email ?? 
+                                 currentUser?.email ?? 
+                                 'user@example.com';
+                    final photoUrl = userProfile?.photoUrl ?? 
+                                    currentUser?.photoURL;
+
+                    return Column(
                       children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundImage: user.photoUrl != null
-                              ? NetworkImage(user.photoUrl!)
-                              : null,
-                          child: user.photoUrl == null
-                              ? Text(
-                                  _getInitials(user.name),
-                                  style: const TextStyle(fontSize: 32),
-                                )
-                              : null,
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 40,
+                              backgroundImage: photoUrl != null
+                                  ? NetworkImage(photoUrl)
+                                  : null,
+                              child: photoUrl == null
+                                  ? Text(
+                                      _getInitials(displayName),
+                                      style: const TextStyle(fontSize: 32),
+                                    )
+                                  : null,
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.camera_alt,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.camera_alt,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          ),
+                        const SizedBox(height: 12),
+                        Text(
+                          displayName,
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
+                        Text(
+                          email,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      user.name,
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                    Text(
-                      user.email,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                    ),
-                  ],
+                    );
+                  },
+                  loading: () => const CircularProgressIndicator(),
+                  error: (_, __) => Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        child: Text(
+                          _getInitials(currentUser?.displayName ?? 'U'),
+                          style: const TextStyle(fontSize: 32),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        currentUser?.displayName ?? 'Người dùng',
+                        style: Theme.of(context).textTheme.headlineLarge,
+                      ),
+                      Text(
+                        currentUser?.email ?? 'user@example.com',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
                 // Edit profile button
@@ -139,7 +141,7 @@ class ProfileScreen extends ConsumerWidget {
                     Expanded(
                       child: _StatCard(
                         icon: Icons.receipt_long,
-                        value: '24',
+                        value: transactionCount,
                         label: 'Giao dịch',
                       ),
                     ),
@@ -153,10 +155,25 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _StatCard(
-                        icon: Icons.savings,
-                        value: '2.5M',
-                        label: 'Tiết kiệm',
+                      child: userProfileAsync.when(
+                        data: (userProfile) {
+                          final budget = userProfile?.monthlyBudget ?? 0;
+                          return _StatCard(
+                            icon: Icons.savings,
+                            value: budget > 0 ? '${(budget / 1000000).toStringAsFixed(1)}M' : '0',
+                            label: 'Ngân sách',
+                          );
+                        },
+                        loading: () => const _StatCard(
+                          icon: Icons.savings,
+                          value: '...',
+                          label: 'Ngân sách',
+                        ),
+                        error: (_, __) => const _StatCard(
+                          icon: Icons.savings,
+                          value: '0',
+                          label: 'Ngân sách',
+                        ),
                       ),
                     ),
                   ],
@@ -271,6 +288,15 @@ class ProfileScreen extends ConsumerWidget {
 
   void _showBudgetDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
+    final userProfileAsync = ref.read(userProfileProvider);
+    
+    // Pre-fill with current budget
+    userProfileAsync.whenData((userProfile) {
+      if (userProfile != null && userProfile.monthlyBudget > 0) {
+        controller.text = userProfile.monthlyBudget.toStringAsFixed(0);
+      }
+    });
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -289,11 +315,31 @@ class ProfileScreen extends ConsumerWidget {
             child: const Text('Hủy'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               final budget = double.tryParse(controller.text);
               if (budget != null) {
-                ref.read(updateBudgetProvider)(budget);
-                Navigator.pop(context);
+                try {
+                  await ref.read(updateBudgetProvider(budget).future);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã cập nhật ngân sách'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Lỗi: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               }
             },
             child: const Text('Lưu'),
@@ -315,9 +361,23 @@ class ProfileScreen extends ConsumerWidget {
             child: const Text('Hủy'),
           ),
           TextButton(
-            onPressed: () {
-              ref.read(signOutProvider)();
-              Navigator.pop(context);
+            onPressed: () async {
+              try {
+                await ref.read(signOutProvider.future);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Lỗi: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,

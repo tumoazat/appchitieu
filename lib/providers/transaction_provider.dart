@@ -10,7 +10,7 @@ final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
 
 // Transactions stream provider for a specific month
 final transactionsStreamProvider = StreamProvider.autoDispose
-    .family<List<TransactionModel>, Map<String, dynamic>>((ref, params) {
+    .family<List<TransactionModel>, Map<String, int>>((ref, params) {
   final repository = ref.watch(transactionRepositoryProvider);
   final user = ref.watch(currentUserProvider);
   
@@ -18,8 +18,8 @@ final transactionsStreamProvider = StreamProvider.autoDispose
     return Stream.value([]);
   }
 
-  final year = params['year'] as int;
-  final month = params['month'] as int;
+  final year = params['year']!;
+  final month = params['month']!;
 
   return repository.getTransactionsByMonth(user.uid, year, month);
 });

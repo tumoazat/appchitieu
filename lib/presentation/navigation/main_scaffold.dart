@@ -25,6 +25,7 @@ class MainScaffold extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      extendBody: true,
       body: child,
       bottomNavigationBar: const BottomNavBar(),
       floatingActionButton: SizedBox(

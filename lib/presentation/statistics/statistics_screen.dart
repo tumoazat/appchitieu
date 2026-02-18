@@ -17,120 +17,86 @@ class StatisticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
     final params = {'year': now.year, 'month': now.month};
-    final statsAsync = ref.watch(monthlyStatsProvider(params));
+    final stats = ref.watch(monthlyStatsProvider(params));
 
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: statsAsync.when(
-          data: (stats) {
-            if (stats.transactionCount == 0) {
-              return EmptyState.noData();
-            }
-
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  // Title
-                  Text(
-                    'Thống kê',
-                    style: AppTypography.headlineLarge(context),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Summary cards
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _SummaryCard(
-                          title: 'Thu nhập',
-                          amount: stats.totalIncome,
-                          color: Theme.of(context).colorScheme.primary,
-                          icon: '💰',
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _SummaryCard(
-                          title: 'Chi tiêu',
-                          amount: stats.totalExpense,
-                          color: Theme.of(context).colorScheme.error,
-                          icon: '💸',
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _SummaryCard(
-                          title: 'Số dư',
-                          amount: stats.balance,
-                          color: stats.balance >= 0
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.error,
-                          icon: '💵',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Pie Chart Section
-                  if (stats.categoryBreakdown.isNotEmpty) ...[
-                    PieChartSection(
-                      categoryBreakdown: stats.categoryBreakdown,
-                      totalExpense: stats.totalExpense,
+        child: stats.transactionCount == 0
+            ? EmptyState.noData()
+            : SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    // Title
+                    Text(
+                      'Thống kê',
+                      style: AppTypography.headlineLarge(context),
                     ),
                     const SizedBox(height: 24),
-                  ],
+                    
+                    // Summary cards
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SummaryCard(
+                            title: 'Thu nhập',
+                            amount: stats.totalIncome,
+                            color: Theme.of(context).colorScheme.primary,
+                            icon: '💰',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _SummaryCard(
+                            title: 'Chi tiêu',
+                            amount: stats.totalExpense,
+                            color: Theme.of(context).colorScheme.error,
+                            icon: '💸',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _SummaryCard(
+                            title: 'Số dư',
+                            amount: stats.balance,
+                            color: stats.balance >= 0
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.error,
+                            icon: '💵',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
 
-                  // Bar Chart Section
-                  const BarChartSection(),
-                  const SizedBox(height: 24),
+                    // Pie Chart Section
+                    if (stats.categoryBreakdown.isNotEmpty) ...[
+                      PieChartSection(
+                        categoryBreakdown: stats.categoryBreakdown,
+                        totalExpense: stats.totalExpense,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
 
-                  // Category Breakdown
-                  if (stats.categoryBreakdown.isNotEmpty) ...[
-                    CategoryBreakdown(params: params),
+                    // Bar Chart Section
+                    const BarChartSection(),
+                    const SizedBox(height: 24),
+
+                    // Category Breakdown
+                    if (stats.categoryBreakdown.isNotEmpty) ...[
+                      CategoryBreakdown(params: params),
+                      const SizedBox(height: 24),
+                    ],
+
+                    // Insight Card
+                    InsightCard(stats: stats),
                     const SizedBox(height: 24),
                   ],
-
-                  // Insight Card
-                  InsightCard(stats: stats),
-                  const SizedBox(height: 24),
-                ],
+                ),
               ),
-            );
-          },
-          loading: () => SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                Text(
-                  'Thống kê',
-                  style: AppTypography.headlineLarge(context),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(child: LoadingShimmer.card(height: 100)),
-                    const SizedBox(width: 12),
-                    Expanded(child: LoadingShimmer.card(height: 100)),
-                    const SizedBox(width: 12),
-                    Expanded(child: LoadingShimmer.card(height: 100)),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                LoadingShimmer.card(height: 300),
-                const SizedBox(height: 24),
-                LoadingShimmer.card(height: 250),
-              ],
-            ),
-          ),
-          error: (error, stack) => EmptyState.error(message: error.toString()),
-        ),
       ),
     );
   }
