@@ -8,7 +8,7 @@ class BottomNavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentRoute = GoRouter.of(context).location;
+    final currentRoute = GoRouterState.of(context).uri.toString();
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
     final inactiveColor = Colors.grey;
@@ -114,7 +114,7 @@ class _NavItem extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: AppTypography.labelSmall.copyWith(color: color),
+              style: AppTypography.labelSmall(context).copyWith(color: color),
             ),
           ],
         ),

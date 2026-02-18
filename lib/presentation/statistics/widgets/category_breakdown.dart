@@ -56,7 +56,7 @@ class CategoryBreakdown extends ConsumerWidget {
                       color: category?.color ?? Colors.grey,
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

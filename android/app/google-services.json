@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "394312833565",
+    "project_id": "appchitieu-nhom4",
+    "storage_bucket": "appchitieu-nhom4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:394312833565:android:5220f760dafabe2801c4f4",
+        "android_client_info": {
+          "package_name": "com.example.appchitieu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "394312833565-4rvvoa6te1f7bhl09huj5ik7pbqlfh4k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-6qhxYrjTF-5aJYfv95fSL2qlX_1nr4I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "394312833565-4rvvoa6te1f7bhl09huj5ik7pbqlfh4k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
