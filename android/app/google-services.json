@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "394312833565",
-    "project_id": "appchitieu-nhom4",
-    "storage_bucket": "appchitieu-nhom4.firebasestorage.app"
+    "project_number": "525491805249",
+    "project_id": "quanlichitieu-4470e",
+    "storage_bucket": "quanlichitieu-4470e.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:394312833565:android:5220f760dafabe2801c4f4",
+        "mobilesdk_app_id": "1:525491805249:android:aa154964f23324d8be3ac0",
         "android_client_info": {
           "package_name": "com.example.appchitieu"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "394312833565-4rvvoa6te1f7bhl09huj5ik7pbqlfh4k.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyC-6qhxYrjTF-5aJYfv95fSL2qlX_1nr4I"
+          "current_key": "AIzaSyCsDAeaBBX4asjWn0GGjgNELC6ZsqSd3yM"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "394312833565-4rvvoa6te1f7bhl09huj5ik7pbqlfh4k.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }
