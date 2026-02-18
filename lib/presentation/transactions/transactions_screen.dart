@@ -9,6 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../home/widgets/transaction_item.dart';
 import '../shared/empty_state.dart';
 import '../shared/loading_shimmer.dart';
+import 'add_transaction_sheet.dart';
 import 'widgets/filter_chips.dart';
 import 'widgets/month_selector.dart';
 
@@ -127,31 +128,20 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                             
                             // Transactions for this date
                             ...dateTransactions.map((transaction) {
-                              return Dismissible(
-                                key: Key(transaction.id),
-                                direction: DismissDirection.endToStart,
-                                background: Container(
-                                  alignment: Alignment.centerRight,
-                                  padding: const EdgeInsets.only(right: 20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.delete,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                confirmDismiss: (direction) async {
-                                  return await _showDeleteConfirmation(
-                                    context,
-                                    transaction,
+                              return TransactionItem(
+                                transaction: transaction,
+                                onTap: () {
+                                  // Open edit sheet
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (context) => AddTransactionSheet(
+                                      editTransaction: transaction,
+                                    ),
                                   );
                                 },
-                                onDismissed: (direction) {
-                                  _deleteTransaction(transaction);
-                                },
-                                child: TransactionItem(transaction: transaction),
+                                onDelete: () => _deleteTransaction(transaction),
                               );
                             }),
                           ],
@@ -223,46 +213,33 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     return total;
   }
 
-  Future<bool> _showDeleteConfirmation(
-    BuildContext context,
-    TransactionModel transaction,
-  ) async {
-    return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: const Text('Bạn có chắc chắn muốn xóa giao dịch này?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-            child: const Text('Xóa'),
-          ),
-        ],
-      ),
-    ) ?? false;
-  }
-
-  void _deleteTransaction(TransactionModel transaction) {
+  void _deleteTransaction(TransactionModel transaction) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
-    ref.read(transactionRepositoryProvider).deleteTransaction(
-      user.uid,
-      transaction.id,
-    );
+    try {
+      await ref.read(transactionRepositoryProvider).deleteTransaction(
+        user.uid,
+        transaction.id,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã xóa giao dịch'),
-        backgroundColor: Colors.red,
-      ),
-    );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã xóa giao dịch'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
