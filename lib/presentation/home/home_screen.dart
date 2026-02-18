@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../core/theme/app_typography.dart';
 import '../shared/empty_state.dart';
+import '../transactions/add_transaction_sheet.dart';
 import 'widgets/home_header.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/quick_actions_row.dart';
@@ -66,7 +68,43 @@ class HomeScreen extends ConsumerWidget {
                           return TransactionItem(
                             transaction: transaction,
                             onTap: () {
-                              // TODO: Navigate to transaction detail
+                              // Open edit sheet
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) => AddTransactionSheet(
+                                  editTransaction: transaction,
+                                ),
+                              );
+                            },
+                            onDelete: () async {
+                              final user = ref.read(currentUserProvider);
+                              if (user != null) {
+                                try {
+                                  await ref.read(transactionRepositoryProvider).deleteTransaction(
+                                    user.uid,
+                                    transaction.id,
+                                  );
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Đã xóa giao dịch'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Lỗi: ${e.toString()}'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
                             },
                           );
                         },
