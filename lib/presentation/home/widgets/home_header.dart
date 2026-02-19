@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../providers/user_provider.dart';
 import '../../../providers/notification_provider.dart';
@@ -25,7 +26,7 @@ class HomeHeader extends ConsumerWidget {
 
     return Row(
       children: [
-        // Avatar
+        // Avatar with animated ring
         Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -33,6 +34,13 @@ class HomeHeader extends ConsumerWidget {
               color: AppColors.primary,
               width: 2,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: CircleAvatar(
             radius: 22,
@@ -77,66 +85,99 @@ class HomeHeader extends ConsumerWidget {
           ),
         ),
         
-        // Notification bell
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-              width: 1,
-            ),
+        // Notification bell with animated badge
+        _AnimatedNotificationBell(),
+      ],
+    );
+  }
+}
+
+class _AnimatedNotificationBell extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => 
+                const NotificationScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(1, 0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                )),
+                child: child,
+              );
+            },
           ),
-          child: Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                iconSize: 22,
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const NotificationScreen(),
-                    ),
-                  );
-                },
+        );
+      },
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Icon(
+                Icons.notifications_outlined,
+                size: 22,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
-              // Badge for unread notifications
-              Consumer(
-                builder: (context, ref, _) {
-                  final unreadCount =
-                      ref.watch(unreadNotificationCountProvider);
-                  if (unreadCount == 0) return const SizedBox.shrink();
-                  return Positioned(
-                    right: 6,
-                    top: 6,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          unreadCount > 9 ? '9+' : '$unreadCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+            ),
+            if (unreadCount > 0) 
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      unreadCount > 9 ? '9+' : '$unreadCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                },
+                  ),
+                ).animate(
+                  onPlay: (c) => c.repeat(reverse: true),
+                ).scaleXY(
+                  begin: 1.0,
+                  end: 1.2,
+                  duration: 1000.ms,
+                  curve: Curves.easeInOut,
+                ),
               ),
-            ],
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

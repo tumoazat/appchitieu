@@ -39,18 +39,21 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
     state = [welcome];
   }
 
-  String _getFinancialContext() {
+  List<TransactionModel> _getCurrentTransactions() {
     final now = DateTime.now();
     final monthKey = '${now.year}-${now.month}';
     final transactionsAsync = _ref.read(transactionsStreamProvider(monthKey));
-    final monthlyBudget = _ref.read(monthlyBudgetProvider);
-    final user = _ref.read(currentUserProvider);
-
-    final transactions = transactionsAsync.when(
+    return transactionsAsync.when(
       data: (data) => data,
       loading: () => <TransactionModel>[],
       error: (_, __) => <TransactionModel>[],
     );
+  }
+
+  String _getFinancialContext() {
+    final transactions = _getCurrentTransactions();
+    final monthlyBudget = _ref.read(monthlyBudgetProvider);
+    final user = _ref.read(currentUserProvider);
 
     return _chatService.buildFinancialContext(
       transactions: transactions,
@@ -81,13 +84,17 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
     state = [...state, loadingMsg];
 
     try {
-      // Get fresh financial context
+      // Get fresh financial context and data
       final context = _getFinancialContext();
+      final transactions = _getCurrentTransactions();
+      final monthlyBudget = _ref.read(monthlyBudgetProvider);
 
-      // Get AI response
+      // Get AI response (will auto-fallback to offline if API fails)
       final response = await _chatService.sendMessage(
         userMessage: text.trim(),
         financialContext: context,
+        transactions: transactions,
+        monthlyBudget: monthlyBudget,
       );
 
       // Replace loading message with actual response
@@ -105,7 +112,8 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
       state = state.map((msg) {
         if (msg.id == loadingId) {
           return msg.copyWith(
-            content: '❌ Có lỗi xảy ra: ${e.toString()}\n\nHãy thử lại nhé!',
+            content: '⚠️ Có lỗi xảy ra. Hãy thử lại nhé!\n\n'
+                '💡 Gợi ý: hỏi "phân tích chi tiêu", "tiết kiệm", "ngân sách", "sức khỏe tài chính"',
             isLoading: false,
           );
         }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_typography.dart';
 
 class EmptyState extends StatelessWidget {
@@ -25,11 +26,18 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Icon
+            // Icon with bounce
             Text(
               icon,
               style: const TextStyle(fontSize: 80),
-            ),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scaleXY(
+                  begin: 1.0,
+                  end: 1.1,
+                  duration: 1500.ms,
+                  curve: Curves.easeInOut,
+                ),
             const SizedBox(height: 24),
             
             // Title

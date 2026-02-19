@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../providers/statistics_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/utils/animation_helpers.dart';
 
 class BalanceCard extends ConsumerWidget {
   const BalanceCard({super.key});
@@ -38,7 +40,6 @@ class BalanceCard extends ConsumerWidget {
         return _buildCard(context, 0, 0, 0, isLoading: true);
       },
       error: (error, stack) {
-        // Fallback: try to use monthlyStatsProvider
         final stats = ref.watch(
           monthlyStatsProvider(monthKey),
         );
@@ -73,17 +74,27 @@ class BalanceCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Label
-          Text(
-            'Số dư hiện tại',
-            style: AppTypography.bodySmall(context).copyWith(
-              color: Colors.white.withOpacity(0.85),
-              fontWeight: FontWeight.w500,
-            ),
+          // Label with eye icon
+          Row(
+            children: [
+              Icon(
+                Icons.account_balance_wallet_rounded,
+                color: Colors.white.withOpacity(0.85),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Số dư hiện tại',
+                style: AppTypography.bodySmall(context).copyWith(
+                  color: Colors.white.withOpacity(0.85),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           
-          // Balance amount with animation
+          // Balance amount with counter animation
           isLoading
               ? const SizedBox(
                   height: 40,
@@ -93,44 +104,33 @@ class BalanceCard extends ConsumerWidget {
                     strokeWidth: 2,
                   ),
                 )
-              : AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
-            },
-            child: Text(
-              CurrencyFormatter.formatVND(balance),
-              key: ValueKey(balance.toStringAsFixed(0)),
-              style: AppTypography.displayLarge(context).copyWith(
-                color: Colors.white,
-                fontSize: 32,
-              ),
-            ),
-          ),
+              : AnimatedCounter(
+                  value: balance,
+                  formatter: (v) => CurrencyFormatter.formatVND(v),
+                  style: AppTypography.displayLarge(context).copyWith(
+                    color: Colors.white,
+                    fontSize: 32,
+                  ),
+                  duration: const Duration(milliseconds: 1000),
+                ),
           
           const SizedBox(height: 20),
           
           // Income and Expense row
           Row(
             children: [
-              // Income box
               Expanded(
                 child: _StatBox(
-                  icon: Icons.arrow_downward,
+                  icon: Icons.arrow_downward_rounded,
                   label: 'Thu nhập',
                   amount: totalIncome,
                   iconColor: Colors.greenAccent,
                 ),
               ),
               const SizedBox(width: 12),
-              
-              // Expense box
               Expanded(
                 child: _StatBox(
-                  icon: Icons.arrow_upward,
+                  icon: Icons.arrow_upward_rounded,
                   label: 'Chi tiêu',
                   amount: totalExpense,
                   iconColor: Colors.redAccent,
@@ -140,7 +140,13 @@ class BalanceCard extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    )
+        .animate()
+        .shimmer(
+          duration: 2000.ms,
+          delay: 1500.ms,
+          color: Colors.white.withOpacity(0.08),
+        );
   }
 }
 
@@ -163,11 +169,10 @@ class _StatBox extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          // Icon
           Container(
             width: 36,
             height: 36,
@@ -182,8 +187,6 @@ class _StatBox extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          
-          // Label and amount
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,15 +199,15 @@ class _StatBox extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  CurrencyFormatter.formatVND(amount),
+                AnimatedCounter(
+                  value: amount,
+                  formatter: (v) => CurrencyFormatter.formatVND(v),
                   style: AppTypography.titleMedium(context).copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  duration: const Duration(milliseconds: 800),
                 ),
               ],
             ),

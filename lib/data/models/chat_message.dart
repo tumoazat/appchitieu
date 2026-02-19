@@ -93,5 +93,60 @@ class QuickAction {
       prompt: 'Dựa trên dữ liệu tháng này, lập kế hoạch chi tiêu cho tháng sau giúp tôi. Nên phân bổ ngân sách như thế nào?',
       color: Color(0xFFA29BFE),
     ),
+    // === DỰ ĐOÁN TÀI CHÍNH ===
+    QuickAction(
+      label: 'Dự đoán cuối tháng',
+      emoji: '🔮',
+      prompt: 'Dự đoán chi tiêu và thu nhập cuối tháng này dựa trên tốc độ hiện tại. Tôi có vượt ngân sách không?',
+      color: Color(0xFF6C5CE7),
+    ),
+    QuickAction(
+      label: 'Xu hướng tài chính',
+      emoji: '📈',
+      prompt: 'Dự báo xu hướng tài chính 3-6-12 tháng tới. Tôi sẽ tích lũy được bao nhiêu? Nếu gửi tiết kiệm thì lãi bao nhiêu?',
+      color: Color(0xFF00CEC9),
+    ),
+    QuickAction(
+      label: 'Tư vấn đầu tư',
+      emoji: '💹',
+      prompt: 'So sánh các kênh đầu tư cho tôi: gửi tiết kiệm, chứng khoán, vàng, bất động sản. Nên phân bổ thế nào?',
+      color: Color(0xFFE17055),
+    ),
+    QuickAction(
+      label: 'Mục tiêu tiết kiệm',
+      emoji: '🎯',
+      prompt: 'Với mức tiết kiệm hiện tại, bao lâu tôi đạt được mục tiêu tiết kiệm mua xe, laptop, du lịch, nhà?',
+      color: Color(0xFF00B894),
+    ),
+    QuickAction(
+      label: 'Đánh giá rủi ro',
+      emoji: '🛡️',
+      prompt: 'Đánh giá rủi ro tài chính của tôi. Tôi có đang an toàn không? Cần cải thiện gì?',
+      color: Color(0xFFFF7675),
+    ),
+    QuickAction(
+      label: 'Kịch bản tài chính',
+      emoji: '🎭',
+      prompt: 'Phân tích 3 kịch bản tài chính: lạc quan, trung bình, bi quan. Nếu thu tăng/giảm 10% thì sao?',
+      color: Color(0xFF0984E3),
+    ),
+    QuickAction(
+      label: 'Tự do tài chính',
+      emoji: '🏖️',
+      prompt: 'Với tỷ lệ tiết kiệm hiện tại, bao giờ tôi đạt tự do tài chính (FIRE)? Cần bao nhiêu tiền để nghỉ hưu sớm?',
+      color: Color(0xFFFDAA5D),
+    ),
+    QuickAction(
+      label: 'Ảnh hưởng lạm phát',
+      emoji: '📊',
+      prompt: 'Lạm phát sẽ ảnh hưởng thế nào đến chi tiêu của tôi trong 1-3-5-10 năm tới? Cách bảo vệ?',
+      color: Color(0xFFA29BFE),
+    ),
+    QuickAction(
+      label: 'Dòng tiền',
+      emoji: '💧',
+      prompt: 'Dự báo dòng tiền 4 tuần tới và 3 tháng tới. Tôi có đủ tiền trang trải không?',
+      color: Color(0xFF55A3E7),
+    ),
   ];
 }

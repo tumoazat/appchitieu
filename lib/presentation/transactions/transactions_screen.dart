@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/models/transaction_model.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/utils/animation_helpers.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../home/widgets/transaction_item.dart';
@@ -41,15 +43,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             children: [
               const SizedBox(height: 20),
               
-              // Title
+              // Title with animation
               Text(
                 'Giao dịch',
                 style: AppTypography.headlineLarge(context),
-              ),
+              ).fadeInSlideUp(index: 0),
               
               const SizedBox(height: 16),
               
-              // Filter chips
+              // Filter chips with animation
               FilterChips(
                 selectedFilter: _selectedFilter,
                 onFilterChanged: (filter) {
@@ -57,11 +59,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     _selectedFilter = filter;
                   });
                 },
-              ),
+              ).fadeInSlideUp(index: 1),
               
               const SizedBox(height: 12),
               
-              // Month selector
+              // Month selector with animation
               MonthSelector(
                 selectedDate: _selectedDate,
                 onDateChanged: (date) {
@@ -69,18 +71,21 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     _selectedDate = date;
                   });
                 },
-              ),
+              ).fadeInSlideUp(index: 2),
               
               const SizedBox(height: 16),
               
-              // Transactions list
+              // Transactions list with staggered entry
               Expanded(
                 child: transactionsAsync.when(
                   data: (transactions) {
                     final filteredTransactions = _filterTransactions(transactions);
                     
                     if (filteredTransactions.isEmpty) {
-                      return EmptyState.noTransactions();
+                      return EmptyState.noTransactions()
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .scaleXY(begin: 0.9, end: 1.0, duration: 400.ms);
                     }
                     
                     final groupedTransactions = _groupTransactionsByDate(
@@ -123,14 +128,23 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                                   ),
                                 ],
                               ),
+                            ).animate().fadeIn(
+                              duration: 300.ms,
+                              delay: Duration(milliseconds: index * 100),
+                            ).slideX(
+                              begin: -0.05,
+                              end: 0,
+                              duration: 300.ms,
+                              delay: Duration(milliseconds: index * 100),
                             ),
                             
                             // Transactions for this date
-                            ...dateTransactions.map((transaction) {
+                            ...dateTransactions.asMap().entries.map((entry) {
+                              final txIndex = entry.key;
+                              final transaction = entry.value;
                               return TransactionItem(
                                 transaction: transaction,
                                 onTap: () {
-                                  // Open edit sheet
                                   showModalBottomSheet(
                                     context: context,
                                     isScrollControlled: true,
@@ -141,6 +155,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                                   );
                                 },
                                 onDelete: () => _deleteTransaction(transaction),
+                              ).animate().fadeIn(
+                                duration: 300.ms,
+                                delay: Duration(milliseconds: (index * 100) + (txIndex * 60) + 50),
+                              ).slideX(
+                                begin: -0.05,
+                                end: 0,
+                                duration: 300.ms,
+                                delay: Duration(milliseconds: (index * 100) + (txIndex * 60) + 50),
+                                curve: Curves.easeOutCubic,
                               );
                             }),
                           ],
@@ -150,11 +173,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   },
                   loading: () => ListView.builder(
                     itemCount: 5,
-                    itemBuilder: (context, index) => LoadingShimmer.listItem(),
+                    itemBuilder: (context, index) => LoadingShimmer.listItem()
+                        .animate()
+                        .fadeIn(
+                          duration: 300.ms,
+                          delay: Duration(milliseconds: index * 100),
+                        ),
                   ),
                   error: (error, stack) => EmptyState.error(
                     message: error.toString(),
-                  ),
+                  ).animate().fadeIn(duration: 400.ms).shake(delay: 400.ms, hz: 2, offset: const Offset(2, 0)),
                 ),
               ),
             ],

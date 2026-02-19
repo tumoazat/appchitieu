@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../core/utils/animation_helpers.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -42,7 +44,7 @@ class ProfileScreen extends ConsumerWidget {
             child: Column(
               children: [
                 const SizedBox(height: 24),
-                // Header section
+                // Header section with animated avatar
                 userProfileAsync.when(
                   data: (userProfile) {
                     final displayName = userProfile?.displayName ?? 
@@ -56,50 +58,29 @@ class ProfileScreen extends ConsumerWidget {
 
                     return Column(
                       children: [
-                        Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundImage: photoUrl != null
-                                  ? NetworkImage(photoUrl)
-                                  : null,
-                              child: photoUrl == null
-                                  ? Text(
-                                      _getInitials(displayName),
-                                      style: const TextStyle(fontSize: 32),
-                                    )
-                                  : null,
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.camera_alt,
-                                  size: 16,
-                                  color: Theme.of(context).colorScheme.onPrimary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        // Animated avatar with ring
+                        _AnimatedAvatar(
+                          photoUrl: photoUrl,
+                          initials: _getInitials(displayName),
+                          primaryColor: Theme.of(context).colorScheme.primary,
+                        ).animate()
+                            .fadeIn(duration: 500.ms)
+                            .scaleXY(begin: 0.7, end: 1.0, duration: 600.ms, curve: Curves.elasticOut),
                         const SizedBox(height: 12),
                         Text(
                           displayName,
                           style: Theme.of(context).textTheme.headlineLarge,
-                        ),
+                        ).animate()
+                            .fadeIn(duration: 400.ms, delay: 200.ms)
+                            .slideY(begin: 0.2, end: 0, duration: 400.ms, delay: 200.ms),
                         Text(
                           email,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: Theme.of(context).colorScheme.secondary,
                               ),
-                        ),
+                        ).animate()
+                            .fadeIn(duration: 400.ms, delay: 300.ms)
+                            .slideY(begin: 0.2, end: 0, duration: 400.ms, delay: 300.ms),
                       ],
                     );
                   },
@@ -129,27 +110,31 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 // Edit profile button
-                TextButton(
+                TextButton.icon(
                   onPressed: () => _showEditProfileDialog(context, ref),
-                  child: const Text('Chỉnh sửa hồ sơ'),
-                ),
+                  icon: const Icon(Icons.edit_rounded, size: 16),
+                  label: const Text('Chỉnh sửa hồ sơ'),
+                ).animate()
+                    .fadeIn(duration: 300.ms, delay: 400.ms),
                 const SizedBox(height: 24),
-                // Quick stats row
+                // Quick stats row — staggered cards
                 Row(
                   children: [
                     Expanded(
-                      child: _StatCard(
+                      child: _AnimatedStatCard(
                         icon: Icons.receipt_long,
                         value: transactionCount,
                         label: 'Giao dịch',
+                        delay: 400,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _StatCard(
+                      child: _AnimatedStatCard(
                         icon: Icons.local_fire_department,
                         value: '7',
                         label: 'Liên tiếp',
+                        delay: 500,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -157,28 +142,31 @@ class ProfileScreen extends ConsumerWidget {
                       child: userProfileAsync.when(
                         data: (userProfile) {
                           final budget = userProfile?.monthlyBudget ?? 0;
-                          return _StatCard(
+                          return _AnimatedStatCard(
                             icon: Icons.savings,
                             value: budget > 0 ? '${(budget / 1000000).toStringAsFixed(1)}M' : '0',
                             label: 'Ngân sách',
+                            delay: 600,
                           );
                         },
-                        loading: () => const _StatCard(
+                        loading: () => const _AnimatedStatCard(
                           icon: Icons.savings,
                           value: '...',
                           label: 'Ngân sách',
+                          delay: 600,
                         ),
-                        error: (_, __) => const _StatCard(
+                        error: (_, __) => const _AnimatedStatCard(
                           icon: Icons.savings,
                           value: '0',
                           label: 'Ngân sách',
+                          delay: 600,
                         ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
-                // Settings sections
+                // Settings sections — staggered entry
                 SettingsSection(
                   title: 'TÙY CHỌN',
                   items: [
@@ -188,29 +176,23 @@ class ProfileScreen extends ConsumerWidget {
                       isToggle: true,
                       toggleValue: isDarkMode,
                       onToggle: (value) {
-                        ref
-                            .read(themeModeProvider.notifier)
-                            .toggleTheme();
+                        ref.read(themeModeProvider.notifier).toggleTheme();
                       },
                     ),
                     SettingsItem(
                       leading: Icons.currency_exchange,
                       title: 'Đơn vị tiền tệ',
                       value: 'VNĐ',
-                      onTap: () {
-                        // Show currency selection
-                      },
+                      onTap: () {},
                     ),
                     SettingsItem(
                       leading: Icons.language,
                       title: 'Ngôn ngữ',
                       value: 'Tiếng Việt',
-                      onTap: () {
-                        // Show language selection
-                      },
+                      onTap: () {},
                     ),
                   ],
-                ),
+                ).fadeInSlideUp(index: 9),
                 SettingsSection(
                   title: 'DỮ LIỆU',
                   items: [
@@ -222,35 +204,27 @@ class ProfileScreen extends ConsumerWidget {
                     SettingsItem(
                       leading: Icons.file_download,
                       title: 'Xuất dữ liệu',
-                      onTap: () {
-                        // Export data
-                      },
+                      onTap: () {},
                     ),
                   ],
-                ),
+                ).fadeInSlideUp(index: 11),
                 SettingsSection(
                   title: 'VỀ ỨNG DỤNG',
                   items: [
                     SettingsItem(
                       leading: '⭐',
                       title: 'Đánh giá ứng dụng',
-                      onTap: () {
-                        // Open app store
-                      },
+                      onTap: () {},
                     ),
                     SettingsItem(
                       leading: '📧',
                       title: 'Liên hệ',
-                      onTap: () {
-                        // Open contact
-                      },
+                      onTap: () {},
                     ),
                     SettingsItem(
                       leading: '🔒',
                       title: 'Chính sách bảo mật',
-                      onTap: () {
-                        // Open privacy policy
-                      },
+                      onTap: () {},
                     ),
                     SettingsItem(
                       leading: Icons.info,
@@ -259,7 +233,7 @@ class ProfileScreen extends ConsumerWidget {
                       onTap: null,
                     ),
                   ],
-                ),
+                ).fadeInSlideUp(index: 13),
                 const SizedBox(height: 24),
                 // Logout button
                 TextButton(
@@ -268,7 +242,8 @@ class ProfileScreen extends ConsumerWidget {
                     foregroundColor: Colors.red,
                   ),
                   child: const Text('Đăng xuất'),
-                ),
+                ).animate()
+                    .fadeIn(duration: 400.ms, delay: 1200.ms),
                 const SizedBox(height: 24),
               ],
             ),
@@ -488,27 +463,114 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
+class _AnimatedAvatar extends StatelessWidget {
+  final String? photoUrl;
+  final String initials;
+  final Color primaryColor;
+
+  const _AnimatedAvatar({
+    required this.photoUrl,
+    required this.initials,
+    required this.primaryColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Outer glow ring
+        Container(
+          width: 92,
+          height: 92,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [
+                primaryColor.withOpacity(0.3),
+                primaryColor.withOpacity(0.1),
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(3),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: primaryColor, width: 2.5),
+                color: Theme.of(context).scaffoldBackgroundColor,
+              ),
+              child: CircleAvatar(
+                radius: 40,
+                backgroundImage: photoUrl != null ? NetworkImage(photoUrl!) : null,
+                child: photoUrl == null
+                    ? Text(initials, style: const TextStyle(fontSize: 32))
+                    : null,
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: primaryColor,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                width: 2,
+              ),
+            ),
+            child: Icon(
+              Icons.camera_alt,
+              size: 16,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AnimatedStatCard extends StatelessWidget {
   final IconData icon;
   final String value;
   final String label;
+  final int delay;
 
-  const _StatCard({
+  const _AnimatedStatCard({
     required this.icon,
     required this.value,
     required this.label,
+    required this.delay,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 2,
+      shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Icon(
-              icon,
-              color: Theme.of(context).colorScheme.primary,
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -528,6 +590,9 @@ class _StatCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ).animate()
+        .fadeIn(duration: 400.ms, delay: Duration(milliseconds: delay))
+        .slideY(begin: 0.3, end: 0, duration: 400.ms, delay: Duration(milliseconds: delay), curve: Curves.easeOutCubic)
+        .scaleXY(begin: 0.85, end: 1.0, duration: 400.ms, delay: Duration(milliseconds: delay));
   }
 }

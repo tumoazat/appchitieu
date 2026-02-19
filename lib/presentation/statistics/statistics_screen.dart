@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/utils/animation_helpers.dart';
 import '../../providers/statistics_provider.dart';
 import '../shared/empty_state.dart';
 import '../../core/utils/currency_formatter.dart';
@@ -23,6 +25,9 @@ class StatisticsScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: stats.transactionCount == 0
             ? EmptyState.noData()
+                .animate()
+                .fadeIn(duration: 500.ms)
+                .scaleXY(begin: 0.9, end: 1.0, duration: 500.ms)
             : SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
@@ -33,38 +38,41 @@ class StatisticsScreen extends ConsumerWidget {
                     Text(
                       'Thống kê',
                       style: AppTypography.headlineLarge(context),
-                    ),
+                    ).fadeInSlideUp(index: 0),
                     const SizedBox(height: 24),
                     
-                    // Summary cards
+                    // Summary cards - staggered entry
                     Row(
                       children: [
                         Expanded(
-                          child: _SummaryCard(
+                          child: _AnimatedSummaryCard(
                             title: 'Thu nhập',
                             amount: stats.totalIncome,
                             color: Theme.of(context).colorScheme.primary,
                             icon: '💰',
+                            delay: 100,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _SummaryCard(
+                          child: _AnimatedSummaryCard(
                             title: 'Chi tiêu',
                             amount: stats.totalExpense,
                             color: Theme.of(context).colorScheme.error,
                             icon: '💸',
+                            delay: 200,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _SummaryCard(
+                          child: _AnimatedSummaryCard(
                             title: 'Số dư',
                             amount: stats.balance,
                             color: stats.balance >= 0
                                 ? Theme.of(context).colorScheme.primary
                                 : Theme.of(context).colorScheme.error,
                             icon: '💵',
+                            delay: 300,
                           ),
                         ),
                       ],
@@ -76,23 +84,23 @@ class StatisticsScreen extends ConsumerWidget {
                       PieChartSection(
                         categoryBreakdown: stats.categoryBreakdown,
                         totalExpense: stats.totalExpense,
-                      ),
+                      ).scaleIn(index: 5),
                       const SizedBox(height: 24),
                     ],
 
                     // Bar Chart Section
-                    const BarChartSection(),
+                    const BarChartSection().fadeInSlideUp(index: 7),
                     const SizedBox(height: 24),
 
                     // Category Breakdown
                     if (stats.categoryBreakdown.isNotEmpty) ...[                    
-                      CategoryBreakdown(monthKey: monthKey),
+                      CategoryBreakdown(monthKey: monthKey).fadeInSlideUp(index: 9),
                       const SizedBox(height: 24),
                     ],
 
                     // Insight Card
-                    InsightCard(stats: stats),
-                    const SizedBox(height: 24),
+                    InsightCard(stats: stats).scaleIn(index: 11),
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -101,22 +109,29 @@ class StatisticsScreen extends ConsumerWidget {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
+class _AnimatedSummaryCard extends StatelessWidget {
   final String title;
   final double amount;
   final Color color;
   final String icon;
+  final int delay;
 
-  const _SummaryCard({
+  const _AnimatedSummaryCard({
     required this.title,
     required this.amount,
     required this.color,
     required this.icon,
+    required this.delay,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 2,
+      shadowColor: color.withOpacity(0.3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -142,17 +157,22 @@ class _SummaryCard extends StatelessWidget {
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
-              child: Text(
-                CurrencyFormatter.formatCompact(amount),
+              child: AnimatedCounter(
+                value: amount,
+                formatter: (v) => CurrencyFormatter.formatCompact(v),
                 style: AppTypography.titleLarge(context).copyWith(
                   color: color,
                   fontWeight: FontWeight.bold,
                 ),
+                duration: Duration(milliseconds: 800 + delay),
               ),
             ),
           ],
         ),
       ),
-    );
+    ).animate()
+        .fadeIn(duration: 400.ms, delay: Duration(milliseconds: delay))
+        .slideY(begin: 0.2, end: 0, duration: 400.ms, delay: Duration(milliseconds: delay), curve: Curves.easeOutCubic)
+        .scaleXY(begin: 0.9, end: 1.0, duration: 400.ms, delay: Duration(milliseconds: delay));
   }
 }

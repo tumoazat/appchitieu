@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -12,7 +13,7 @@ class QuickActionsRow extends StatelessWidget {
       children: [
         Expanded(
           child: _QuickActionButton(
-            icon: Icons.add,
+            icon: Icons.add_rounded,
             label: 'Thêm',
             color: AppColors.primary,
             onTap: () {
@@ -47,7 +48,7 @@ class QuickActionsRow extends StatelessWidget {
   }
 }
 
-class _QuickActionButton extends StatelessWidget {
+class _QuickActionButton extends StatefulWidget {
   final IconData icon;
   final String label;
   final Color color;
@@ -61,19 +62,51 @@ class _QuickActionButton extends StatelessWidget {
   });
 
   @override
+  State<_QuickActionButton> createState() => _QuickActionButtonState();
+}
+
+class _QuickActionButtonState extends State<_QuickActionButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: ScaleTransition(
+        scale: _scaleAnimation,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: widget.color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: color.withOpacity(0.2),
+              color: widget.color.withOpacity(0.2),
               width: 1,
             ),
           ),
@@ -81,23 +114,30 @@ class _QuickActionButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      widget.color.withOpacity(0.2),
+                      widget.color.withOpacity(0.1),
+                    ],
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  icon,
-                  color: color,
+                  widget.icon,
+                  color: widget.color,
                   size: 24,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                label,
+                widget.label,
                 style: AppTypography.labelMedium(context).copyWith(
-                  color: color,
+                  color: widget.color,
                   fontWeight: FontWeight.w600,
                 ),
               ),

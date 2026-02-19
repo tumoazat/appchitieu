@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../providers/statistics_provider.dart';
@@ -50,19 +51,19 @@ class InsightCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             
-            // Insights
+            // Insights with staggered animation
             _InsightRow(
               label: 'Tổng số giao dịch',
               value: '${stats.transactionCount}',
               primaryColor: primaryColor,
-            ),
+            ).animate().fadeIn(duration: 300.ms, delay: 200.ms).slideX(begin: -0.05, end: 0, duration: 300.ms, delay: 200.ms),
             const SizedBox(height: 12),
             
             _InsightRow(
               label: 'Trung bình mỗi giao dịch',
               value: CurrencyFormatter.formatVND(averagePerTransaction),
               primaryColor: primaryColor,
-            ),
+            ).animate().fadeIn(duration: 300.ms, delay: 350.ms).slideX(begin: -0.05, end: 0, duration: 300.ms, delay: 350.ms),
             const SizedBox(height: 12),
             
             _InsightRow(
@@ -72,7 +73,7 @@ class InsightCard extends StatelessWidget {
               valueColor: stats.savingRate >= 0
                   ? primaryColor
                   : Theme.of(context).colorScheme.error,
-            ),
+            ).animate().fadeIn(duration: 300.ms, delay: 500.ms).slideX(begin: -0.05, end: 0, duration: 300.ms, delay: 500.ms),
             
             // Additional insight message
             if (stats.savingRate < 0) ...[
