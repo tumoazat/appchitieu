@@ -156,7 +156,19 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               onPressed: () async {
                 final limit = double.tryParse(limitController.text);
                 final user = ref.read(currentUserProvider);
-                if (limit == null || limit <= 0 || selectedCategoryId == null || user == null) return;
+                if (selectedCategoryId == null) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(content: Text('Vui lòng chọn danh mục')),
+                  );
+                  return;
+                }
+                if (limit == null || limit <= 0) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(content: Text('Vui lòng nhập số tiền hợp lệ (> 0)')),
+                  );
+                  return;
+                }
+                if (user == null) return;
                 await ref.read(budgetNotifierProvider.notifier).setBudget(
                       userId: user.uid,
                       categoryId: selectedCategoryId!,

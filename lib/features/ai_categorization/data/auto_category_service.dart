@@ -38,7 +38,7 @@ class AutoCategoryService {
       }
     }
 
-    final confidence = bestScore > 0 ? (bestScore / lower.length).clamp(0.1, 1.0) : 0.0;
+    final confidence = bestScore > 0 ? 0.8 : 0.0;
 
     return CategorySuggestion(
       categoryId: bestCategory,
