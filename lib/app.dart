@@ -4,6 +4,12 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
+import 'features/onboarding/data/onboarding_repository.dart';
+
+/// Checks whether the user has already seen the onboarding flow.
+final onboardingSeenProvider = FutureProvider<bool>((ref) async {
+  return OnboardingRepository().hasSeenOnboarding();
+});
 
 class SmartExpenseApp extends ConsumerWidget {
   const SmartExpenseApp({super.key});
@@ -16,11 +22,15 @@ class SmartExpenseApp extends ConsumerWidget {
     // Watch auth state
     final authState = ref.watch(authStateProvider);
 
+    // Watch onboarding state (default true so existing users are unaffected)
+    final onboardingSeen = ref.watch(onboardingSeenProvider).valueOrNull ?? true;
+
     return authState.when(
       data: (user) {
         // Create router based on auth state
         final router = AppRouter.createRouter(
           isAuthenticated: user != null,
+          hasSeenOnboarding: onboardingSeen,
         );
 
         return MaterialApp.router(

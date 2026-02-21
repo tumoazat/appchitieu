@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:async';
 import '../../data/models/transaction_model.dart';
 import '../../core/constants/category_data.dart';
 import '../../core/utils/currency_formatter.dart';
@@ -10,6 +11,7 @@ import '../../core/theme/app_colors.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
+import '../../features/ai_categorization/application/categorization_notifier.dart';
 import '../shared/gradient_button.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
@@ -28,6 +30,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   late DateTime _date;
   final TextEditingController _noteController = TextEditingController();
   bool _isLoading = false;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -48,6 +51,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _noteController.dispose();
     super.dispose();
   }
@@ -257,7 +261,41 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                       ),
                     ),
                     maxLines: 2,
+                    onChanged: _onNoteChanged,
                   ),
+
+                  // AI suggestion chip
+                  if (_type == TransactionType.expense)
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final suggestion = ref.watch(categorizationNotifierProvider);
+                        if (suggestion == null) return const SizedBox.shrink();
+                        final cat = CategoryModel.findById(suggestion.categoryId);
+                        if (cat == null) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Chip(
+                                avatar: Text(cat.emoji, style: const TextStyle(fontSize: 14)),
+                                label: Text('Gợi ý: ${cat.name}'),
+                                deleteIcon: const Icon(Icons.close, size: 16),
+                                onDeleted: () => ref.read(categorizationNotifierProvider.notifier).dismiss(),
+                                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              ),
+                              const SizedBox(width: 8),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() => _categoryId = suggestion.categoryId);
+                                  ref.read(categorizationNotifierProvider.notifier).dismiss();
+                                },
+                                child: const Text('Áp dụng'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   
                   const SizedBox(height: 24),
                 ],
@@ -281,6 +319,15 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         ],
       ),
     );
+  }
+
+  void _onNoteChanged(String text) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        ref.read(categorizationNotifierProvider.notifier).analyze(text);
+      }
+    });
   }
 
   Widget _buildAmountKeypad() {

@@ -6,6 +6,8 @@ import '../../core/utils/animation_helpers.dart';
 import '../../providers/statistics_provider.dart';
 import '../shared/empty_state.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../providers/auth_provider.dart';
+import '../../features/export/application/export_report_usecase.dart';
 import 'widgets/pie_chart_section.dart';
 import 'widgets/bar_chart_section.dart';
 import 'widgets/category_breakdown.dart';
@@ -34,11 +36,21 @@ class StatisticsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
-                    // Title
-                    Text(
-                      'Thống kê',
-                      style: AppTypography.headlineLarge(context),
-                    ).fadeInSlideUp(index: 0),
+                    // Title row with export button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Thống kê',
+                          style: AppTypography.headlineLarge(context),
+                        ).fadeInSlideUp(index: 0),
+                        IconButton.filledTonal(
+                          icon: const Icon(Icons.picture_as_pdf_rounded),
+                          tooltip: 'Xuất PDF',
+                          onPressed: () => _exportPdf(context, ref, now.month, now.year),
+                        ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
+                      ],
+                    ),
                     const SizedBox(height: 24),
                     
                     // Summary cards - staggered entry
@@ -106,6 +118,24 @@ class StatisticsScreen extends ConsumerWidget {
               ),
       ),
     );
+  }
+
+  Future<void> _exportPdf(BuildContext context, WidgetRef ref, int month, int year) async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+    try {
+      final useCase = ref.read(exportReportUseCaseProvider);
+      await useCase.call(userId: user.uid, month: month, year: year);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi xuất PDF: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 
