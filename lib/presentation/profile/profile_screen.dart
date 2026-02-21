@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../features/export/application/export_report_usecase.dart';
 import 'widgets/settings_section.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -204,7 +205,7 @@ class ProfileScreen extends ConsumerWidget {
                     SettingsItem(
                       leading: Icons.file_download,
                       title: 'Xuất dữ liệu',
-                      onTap: () {},
+                      onTap: () => _exportData(context, ref),
                     ),
                   ],
                 ).fadeInSlideUp(index: 11),
@@ -460,6 +461,25 @@ class ProfileScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _exportData(BuildContext context, WidgetRef ref) async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+    final now = DateTime.now();
+    try {
+      final useCase = ref.read(exportReportUseCaseProvider);
+      await useCase.call(userId: user.uid, month: now.month, year: now.year);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi xuất dữ liệu: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 
