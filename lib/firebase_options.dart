@@ -47,30 +47,34 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBdQht1sbypzdHhgG_1KjQnvNQ5vvOIB6g',
-    appId: '1:394312833565:web:175f43734b546e4d01c4f4',
-    messagingSenderId: '394312833565',
-    projectId: 'appchitieu-nhom4',
-    authDomain: 'appchitieu-nhom4.firebaseapp.com',
-    storageBucket: 'appchitieu-nhom4.firebasestorage.app',
-    measurementId: 'G-PPVTLV48LQ',
+    apiKey: 'AIzaSyBTPColvnpuZMTdYKhzqc6KWczv16LqCWc',
+    appId: '1:525491805249:web:0c7014eaba4ae2e8be3ac0',
+    messagingSenderId: '525491805249',
+    projectId: 'quanlichitieu-4470e',
+    authDomain: 'quanlichitieu-4470e.firebaseapp.com',
+    databaseURL: 'https://quanlichitieu-4470e-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'quanlichitieu-4470e.firebasestorage.app',
+    measurementId: 'G-DK5YR7T2NF',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC-6qhxYrjTF-5aJYfv95fSL2qlX_1nr4I',
-    appId: '1:394312833565:android:5220f760dafabe2801c4f4',
-    messagingSenderId: '394312833565',
-    projectId: 'appchitieu-nhom4',
-    storageBucket: 'appchitieu-nhom4.firebasestorage.app',
+    apiKey: 'AIzaSyCsDAeaBBX4asjWn0GGjgNELC6ZsqSd3yM',
+    appId: '1:525491805249:android:aa154964f23324d8be3ac0',
+    messagingSenderId: '525491805249',
+    projectId: 'quanlichitieu-4470e',
+    databaseURL: 'https://quanlichitieu-4470e-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'quanlichitieu-4470e.firebasestorage.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBdQht1sbypzdHhgG_1KjQnvNQ5vvOIB6g',
-    appId: '1:394312833565:web:54c4e588f967fce801c4f4',
-    messagingSenderId: '394312833565',
-    projectId: 'appchitieu-nhom4',
-    authDomain: 'appchitieu-nhom4.firebaseapp.com',
-    storageBucket: 'appchitieu-nhom4.firebasestorage.app',
-    measurementId: 'G-BP29SS9L31',
+    apiKey: 'AIzaSyBTPColvnpuZMTdYKhzqc6KWczv16LqCWc',
+    appId: '1:525491805249:web:dbf90a2e0b676251be3ac0',
+    messagingSenderId: '525491805249',
+    projectId: 'quanlichitieu-4470e',
+    authDomain: 'quanlichitieu-4470e.firebaseapp.com',
+    databaseURL: 'https://quanlichitieu-4470e-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'quanlichitieu-4470e.firebasestorage.app',
+    measurementId: 'G-DX8PKZLY3L',
   );
+
 }

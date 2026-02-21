@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:developer' as developer;
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/constants/app_constants.dart';
@@ -110,12 +111,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           context.go('/home');
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      developer.log('❌ Register error: $e', stackTrace: stackTrace);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_getVietnameseErrorMessage(e.toString())),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -129,16 +132,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   String _getVietnameseErrorMessage(String error) {
-    if (error.contains('email-already-in-use')) {
+    // Exception messages start with "Exception: "
+    String msg = error;
+    if (msg.startsWith('Exception: ')) {
+      msg = msg.substring('Exception: '.length);
+    }
+    
+    // If already Vietnamese (from auth_repository), return directly
+    if (msg.contains('Không tìm thấy') ||
+        msg.contains('Mật khẩu') ||
+        msg.contains('Email') ||
+        msg.contains('tài khoản') ||
+        msg.contains('Quá nhiều') ||
+        msg.contains('kết nối') ||
+        msg.contains('Lỗi') ||
+        msg.contains('Phương thức') ||
+        msg.contains('đăng nhập')) {
+      return msg;
+    }
+    
+    // Fallback for raw Firebase error codes
+    if (msg.contains('email-already-in-use')) {
       return 'Email đã được sử dụng';
-    } else if (error.contains('invalid-email')) {
+    } else if (msg.contains('invalid-email')) {
       return 'Email không hợp lệ';
-    } else if (error.contains('weak-password')) {
+    } else if (msg.contains('weak-password')) {
       return 'Mật khẩu quá yếu';
-    } else if (error.contains('network-request-failed')) {
+    } else if (msg.contains('network-request-failed')) {
       return 'Lỗi kết nối mạng';
+    } else if (msg.contains('operation-not-allowed')) {
+      return 'Phương thức đăng ký chưa được bật. Vào Firebase Console bật Email/Password';
+    } else if (msg.contains('channel-error')) {
+      return 'Lỗi kênh liên lạc. Vui lòng thử lại';
     } else {
-      return 'Đã xảy ra lỗi. Vui lòng thử lại';
+      return 'Lỗi: $msg';
     }
   }
 

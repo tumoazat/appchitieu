@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'dart:developer' as developer;
 
 class AuthRepository {
   final FirebaseAuth _firebaseAuth;
@@ -23,12 +24,18 @@ class AuthRepository {
     required String password,
   }) async {
     try {
-      return await _firebaseAuth.signInWithEmailAndPassword(
+      final result = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      developer.log('✅ Login success: ${result.user?.email}');
+      return result;
     } on FirebaseAuthException catch (e) {
+      developer.log('❌ Login FirebaseAuthException: code=${e.code}, message=${e.message}');
       throw _handleAuthException(e);
+    } catch (e) {
+      developer.log('❌ Login unknown error: $e');
+      rethrow;
     }
   }
 
@@ -48,9 +55,14 @@ class AuthRepository {
       await credential.user?.updateDisplayName(displayName);
       await credential.user?.reload();
 
+      developer.log('✅ Register success: ${credential.user?.email}');
       return credential;
     } on FirebaseAuthException catch (e) {
+      developer.log('❌ Register FirebaseAuthException: code=${e.code}, message=${e.message}');
       throw _handleAuthException(e);
+    } catch (e) {
+      developer.log('❌ Register unknown error: $e');
+      rethrow;
     }
   }
 
@@ -77,9 +89,11 @@ class AuthRepository {
       // Sign in to Firebase with the Google credential
       return await _firebaseAuth.signInWithCredential(credential);
     } on FirebaseAuthException catch (e) {
+      developer.log('❌ Google sign-in FirebaseAuthException: code=${e.code}, message=${e.message}');
       throw _handleAuthException(e);
     } catch (e) {
-      throw Exception('Failed to sign in with Google: $e');
+      developer.log('❌ Google sign-in error: $e');
+      throw Exception('Đăng nhập Google thất bại: $e');
     }
   }
 
@@ -114,28 +128,49 @@ class AuthRepository {
   }
 
   // Handle Firebase Auth exceptions
-  String _handleAuthException(FirebaseAuthException e) {
+  Exception _handleAuthException(FirebaseAuthException e) {
+    String message;
     switch (e.code) {
       case 'user-not-found':
-        return 'Không tìm thấy tài khoản với email này';
+        message = 'Không tìm thấy tài khoản với email này';
+        break;
       case 'wrong-password':
-        return 'Mật khẩu không chính xác';
+        message = 'Mật khẩu không chính xác';
+        break;
+      case 'invalid-credential':
+        message = 'Email hoặc mật khẩu không đúng';
+        break;
       case 'email-already-in-use':
-        return 'Email này đã được sử dụng';
+        message = 'Email này đã được sử dụng';
+        break;
       case 'invalid-email':
-        return 'Email không hợp lệ';
+        message = 'Email không hợp lệ';
+        break;
       case 'weak-password':
-        return 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn';
+        message = 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn';
+        break;
       case 'user-disabled':
-        return 'Tài khoản này đã bị vô hiệu hóa';
+        message = 'Tài khoản này đã bị vô hiệu hóa';
+        break;
       case 'too-many-requests':
-        return 'Quá nhiều yêu cầu. Vui lòng thử lại sau';
+        message = 'Quá nhiều yêu cầu. Vui lòng thử lại sau';
+        break;
       case 'operation-not-allowed':
-        return 'Phương thức đăng nhập này chưa được kích hoạt';
+        message = 'Phương thức đăng nhập Email/Password chưa được bật trong Firebase Console. Vào Firebase Console → Authentication → Sign-in method → Bật Email/Password';
+        break;
       case 'requires-recent-login':
-        return 'Vui lòng đăng nhập lại để thực hiện thao tác này';
+        message = 'Vui lòng đăng nhập lại để thực hiện thao tác này';
+        break;
+      case 'network-request-failed':
+        message = 'Lỗi kết nối mạng. Vui lòng kiểm tra internet';
+        break;
+      case 'channel-error':
+        message = 'Lỗi kênh liên lạc. Vui lòng thử lại';
+        break;
       default:
-        return e.message ?? 'Đã xảy ra lỗi không xác định';
+        message = 'Lỗi xác thực [${e.code}]: ${e.message ?? 'Không xác định'}';
+        break;
     }
+    return Exception(message);
   }
 }

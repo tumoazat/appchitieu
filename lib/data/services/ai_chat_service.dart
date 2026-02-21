@@ -1275,7 +1275,6 @@ $recentList
     }
 
     // 5. Quỹ khẩn cấp
-    final emergencyMonths = income > 0 ? (income - expense) > 0 ? 0 : 0 : 0; // Simplified
     if (savingRate < 20) { riskScore += 10; risks.add('🟡 Quỹ khẩn cấp có thể không đủ'); }
 
     String level;
@@ -1389,9 +1388,7 @@ $recentList
   /// Dự đoán dòng tiền
   String _predictCashFlow(double income, double expense, double budget, List<TransactionModel>? transactions) {
     final now = DateTime.now();
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
     final daysPassed = now.day;
-    final daysLeft = daysInMonth - daysPassed;
 
     final dailyExpense = daysPassed > 0 ? expense / daysPassed : 0.0;
     final dailyIncome = daysPassed > 0 ? income / daysPassed : 0.0;
