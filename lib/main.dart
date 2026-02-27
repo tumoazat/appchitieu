@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'app.dart';
+import 'core/services/crash_reporting_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,9 @@ void main() async {
   } catch (_) {
     // Firebase may already be initialized by native plugin
   }
+
+  // Khởi tạo Crashlytics để theo dõi lỗi
+  await CrashReportingService.initialize();
 
   runApp(const ProviderScope(child: SmartExpenseApp()));
 }

@@ -9,6 +9,7 @@ import '../../providers/theme_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../features/export/application/export_report_usecase.dart';
 import 'widgets/settings_section.dart';
+import 'account_deletion_dialog.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -245,6 +246,21 @@ class ProfileScreen extends ConsumerWidget {
                   child: const Text('Đăng xuất'),
                 ).animate()
                     .fadeIn(duration: 400.ms, delay: 1200.ms),
+                // Nút xóa tài khoản (màu đỏ, nguy hiểm)
+                TextButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const AccountDeletionDialog(),
+                    );
+                  },
+                  icon: const Icon(Icons.delete_forever, color: Colors.red),
+                  label: const Text(
+                    'Xóa tài khoản',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ).animate()
+                    .fadeIn(duration: 400.ms, delay: 1300.ms),
                 const SizedBox(height: 24),
               ],
             ),

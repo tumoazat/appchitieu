@@ -9,6 +9,10 @@ import '../../presentation/ai_advice/ai_advice_screen.dart';
 import '../../presentation/profile/profile_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/budgets/presentation/budget_screen.dart';
+import '../../presentation/transactions/search_screen.dart';
+import '../../presentation/settings/settings_screen.dart';
+import '../../features/gamification/screens/achievements_screen.dart';
+import '../../features/ocr/ocr_scan_screen.dart';
 
 class AppRouter {
   static const String onboarding = '/onboarding';
@@ -20,6 +24,10 @@ class AppRouter {
   static const String aiAdvice = '/ai-advice';
   static const String profile = '/profile';
   static const String budget = '/budget';
+  static const String search = '/search';
+  static const String settings = '/settings';
+  static const String achievements = '/achievements';
+  static const String ocrScan = '/ocr-scan';
 
   // Create router configuration
   static GoRouter createRouter({
@@ -50,6 +58,30 @@ class AppRouter {
         GoRoute(
           path: budget,
           builder: (context, state) => const BudgetScreen(),
+        ),
+
+        // Tìm kiếm giao dịch nâng cao
+        GoRoute(
+          path: search,
+          builder: (context, state) => const SearchScreen(),
+        ),
+
+        // Màn hình cài đặt
+        GoRoute(
+          path: settings,
+          builder: (context, state) => const SettingsScreen(),
+        ),
+
+        // Màn hình thành tựu gamification
+        GoRoute(
+          path: achievements,
+          builder: (context, state) => const AchievementsScreen(),
+        ),
+
+        // Màn hình scan hóa đơn OCR
+        GoRoute(
+          path: ocrScan,
+          builder: (context, state) => const OcrScanScreen(),
         ),
 
         // Main app with bottom navigation shell

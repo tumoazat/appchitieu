@@ -19,7 +19,7 @@ Chatbot **KHÔNG** sử dụng logic if-else hay rule-based (phiên bản cũ `a
 
 ### 🔑 API Key
 ```
-AIzaSyA8R-AEVqBPOjjGZYi_MsaZ6pVzFHoNy8o
+YOUR_API_KEY_HERE
 ```
 API key được lưu trực tiếp trong `ai_chat_service.dart`. Trong production nên chuyển sang biến môi trường hoặc backend proxy.
 
