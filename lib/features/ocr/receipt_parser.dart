@@ -2,26 +2,73 @@
 class ReceiptParser {
   /// Trích xuất số tiền từ text hóa đơn
   static double? extractAmount(String text) {
-    // Tìm các pattern số tiền: 1.000.000, 1,000,000, 1000000, 150.000đ
-    final patterns = [
-      RegExp(r'(\d{1,3}(?:[.,]\d{3})+)(?:đ|vnd|vnđ)?', caseSensitive: false),
-      RegExp(r'(\d+)(?:đ|vnd|vnđ)', caseSensitive: false),
+    // Ưu tiên lấy từ các từ khóa tổng tiền trước
+    final keywordPatterns = [
       RegExp(r'tổng[:\s]+(\d[\d.,]+)', caseSensitive: false),
       RegExp(r'total[:\s]+(\d[\d.,]+)', caseSensitive: false),
       RegExp(r'thành tiền[:\s]+(\d[\d.,]+)', caseSensitive: false),
     ];
 
-    for (final pattern in patterns) {
+    for (final pattern in keywordPatterns) {
       final match = pattern.firstMatch(text);
       if (match != null) {
-        final amountStr = match
-            .group(1)!
-            .replaceAll('.', '')
-            .replaceAll(',', '');
-        return double.tryParse(amountStr);
+        final parsed = _parseAmountString(match.group(1)!);
+        if (parsed != null) return parsed;
       }
     }
+
+    // Format VNĐ: dùng dấu chấm phân nhóm hàng nghìn (1.000.000)
+    final dotSeparatedPattern = RegExp(
+      r'(\d{1,3}(?:\.\d{3})+)(?:đ|vnd|vnđ)?',
+      caseSensitive: false,
+    );
+    final dotMatch = dotSeparatedPattern.firstMatch(text);
+    if (dotMatch != null) {
+      final cleaned = dotMatch.group(1)!.replaceAll('.', '');
+      final amount = double.tryParse(cleaned);
+      // Số hợp lệ VNĐ: >= 1000
+      if (amount != null && amount >= 1000) return amount;
+    }
+
+    // Format quốc tế: dùng dấu phẩy phân nhóm (1,000,000)
+    final commaSeparatedPattern = RegExp(
+      r'(\d{1,3}(?:,\d{3})+)(?:đ|vnd|vnđ)?',
+      caseSensitive: false,
+    );
+    final commaMatch = commaSeparatedPattern.firstMatch(text);
+    if (commaMatch != null) {
+      final cleaned = commaMatch.group(1)!.replaceAll(',', '');
+      return double.tryParse(cleaned);
+    }
+
+    // Số kèm ký hiệu tiền tệ không có phân cách
+    final currencyPattern = RegExp(r'(\d+)(?:đ|vnd|vnđ)', caseSensitive: false);
+    final currencyMatch = currencyPattern.firstMatch(text);
+    if (currencyMatch != null) {
+      return double.tryParse(currencyMatch.group(1)!);
+    }
+
     return null;
+  }
+
+  /// Phân tích chuỗi số tiền có thể có phân cách
+  static double? _parseAmountString(String amountStr) {
+    // Đếm dấu chấm và phẩy để phân biệt định dạng
+    final dotCount = '.'.allMatches(amountStr).length;
+    final commaCount = ','.allMatches(amountStr).length;
+
+    String cleaned;
+    if (dotCount > 1 || (dotCount >= 1 && commaCount == 0)) {
+      // VNĐ format: 1.000.000 — chấm là phân nhóm
+      cleaned = amountStr.replaceAll('.', '').replaceAll(',', '');
+    } else if (commaCount > 1 || (commaCount >= 1 && dotCount == 0)) {
+      // Quốc tế: 1,000,000 — phẩy là phân nhóm
+      cleaned = amountStr.replaceAll(',', '').replaceAll('.', '');
+    } else {
+      // Không rõ — xóa cả hai
+      cleaned = amountStr.replaceAll('.', '').replaceAll(',', '');
+    }
+    return double.tryParse(cleaned);
   }
 
   /// Trích xuất mô tả từ text hóa đơn
