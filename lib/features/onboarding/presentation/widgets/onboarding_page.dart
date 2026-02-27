@@ -49,6 +49,7 @@ class OnboardingPage extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: color,
+                  inherit: false,
                 ),
             textAlign: TextAlign.center,
           ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, delay: 200.ms),
@@ -58,6 +59,7 @@ class OnboardingPage extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   height: 1.6,
+                  inherit: false,
                 ),
             textAlign: TextAlign.center,
           ).animate().fadeIn(duration: 400.ms, delay: 350.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, delay: 350.ms),

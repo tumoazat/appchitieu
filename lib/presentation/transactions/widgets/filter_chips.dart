@@ -97,6 +97,7 @@ class _AnimatedFilterChip extends StatelessWidget {
             color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             fontSize: 14,
+            inherit: false,
           ),
           child: Text(label),
         ),

@@ -78,6 +78,7 @@ class ProfileScreen extends ConsumerWidget {
                           email,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: Theme.of(context).colorScheme.secondary,
+                                inherit: false,
                               ),
                         ).animate()
                             .fadeIn(duration: 400.ms, delay: 300.ms)
@@ -104,6 +105,7 @@ class ProfileScreen extends ConsumerWidget {
                         currentUser?.email ?? 'user@example.com',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context).colorScheme.secondary,
+                              inherit: false,
                             ),
                       ),
                     ],
@@ -596,6 +598,7 @@ class _AnimatedStatCard extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    inherit: false,
                     fontWeight: FontWeight.bold,
                   ),
             ),
@@ -603,6 +606,7 @@ class _AnimatedStatCard extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    inherit: false,
                     color: Theme.of(context).colorScheme.secondary,
                   ),
               textAlign: TextAlign.center,

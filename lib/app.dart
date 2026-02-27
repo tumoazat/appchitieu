@@ -4,12 +4,7 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
-import 'features/onboarding/data/onboarding_repository.dart';
-
-/// Checks whether the user has already seen the onboarding flow.
-final onboardingSeenProvider = FutureProvider<bool>((ref) async {
-  return OnboardingRepository().hasSeenOnboarding();
-});
+import 'providers/onboarding_provider.dart';
 
 class SmartExpenseApp extends ConsumerWidget {
   const SmartExpenseApp({super.key});
@@ -21,16 +16,17 @@ class SmartExpenseApp extends ConsumerWidget {
     
     // Watch auth state
     final authState = ref.watch(authStateProvider);
-
-    // Watch onboarding state (default true so existing users are unaffected)
-    final onboardingSeen = ref.watch(onboardingSeenProvider).valueOrNull ?? true;
+    
+    // Watch onboarding state (cached value from initialization)
+    final hasSeenOnboardingCached = ref.watch(onboardingStateProvider) ?? false;
 
     return authState.when(
       data: (user) {
-        // Create router based on auth state
+        print('🟢 App: User = ${user?.email ?? 'null'}, hasSeenOnboarding = $hasSeenOnboardingCached');
+        
         final router = AppRouter.createRouter(
           isAuthenticated: user != null,
-          hasSeenOnboarding: onboardingSeen,
+          hasSeenOnboarding: hasSeenOnboardingCached,
         );
 
         return MaterialApp.router(
@@ -60,11 +56,12 @@ class SmartExpenseApp extends ConsumerWidget {
                     style: TextStyle(fontSize: 80),
                   ),
                   const SizedBox(height: 24),
-                  Text(
+                  const Text(
                     'Smart Expense',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const CircularProgressIndicator(),

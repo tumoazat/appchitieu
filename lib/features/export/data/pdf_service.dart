@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -7,12 +9,47 @@ import '../../../../core/constants/category_data.dart';
 
 /// Generates a monthly finance PDF report.
 class PdfService {
+  /// Creates the PDF and returns the bytes.
+  /// On native platforms, also saves to temp dir and returns [File].
+  /// On web, returns null for file but bytes can be used directly.
+  Future<Uint8List> generatePdfBytes({
+    required int month,
+    required int year,
+    required List<TransactionModel> transactions,
+  }) async {
+    final pdf = _buildPdf(month: month, year: year, transactions: transactions);
+    return pdf.save();
+  }
+
   /// Creates the PDF, saves to temp dir, and returns the [File].
+  /// Only works on native platforms (not web).
   Future<File> generateMonthlyReport({
     required int month,
     required int year,
     required List<TransactionModel> transactions,
   }) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'generateMonthlyReport không hỗ trợ trên Web. Dùng generatePdfBytes() thay thế.',
+      );
+    }
+    final pdfBytes = await generatePdfBytes(
+      month: month,
+      year: year,
+      transactions: transactions,
+    );
+    final dir = await getTemporaryDirectory();
+    final mStr = month.toString().padLeft(2, '0');
+    final file = File('${dir.path}/finance_report_${mStr}_$year.pdf');
+    await file.writeAsBytes(pdfBytes);
+    return file;
+  }
+
+  pw.Document _buildPdf({
+    required int month,
+    required int year,
+    required List<TransactionModel> transactions,
+  }) {
     final pdf = pw.Document();
 
     // ── aggregate ────────────────────────────────────────────────────────
@@ -132,12 +169,7 @@ class PdfService {
       ),
     );
 
-    // ── save to temp file ─────────────────────────────────────────────────
-    final dir = await getTemporaryDirectory();
-    final mStr = month.toString().padLeft(2, '0');
-    final file = File('${dir.path}/finance_report_${mStr}_$year.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file;
+    return pdf;
   }
 
   pw.Widget _summaryRow(String label, double amount) {

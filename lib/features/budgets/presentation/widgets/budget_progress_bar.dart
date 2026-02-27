@@ -22,6 +22,7 @@ class BudgetProgressBar extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: progress.statusColor,
                     fontWeight: FontWeight.bold,
+                    inherit: false,
                   ),
             ),
             if (progress.isExceeded)
@@ -30,6 +31,7 @@ class BudgetProgressBar extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: progress.statusColor,
                       fontWeight: FontWeight.bold,
+                      inherit: false,
                     ),
               ),
           ],

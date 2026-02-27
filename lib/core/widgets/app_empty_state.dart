@@ -40,6 +40,7 @@ class AppEmptyState extends StatelessWidget {
                     title,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
+                          inherit: false,
                         ),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.2, end: 0, duration: 300.ms, delay: 100.ms),
@@ -48,6 +49,7 @@ class AppEmptyState extends StatelessWidget {
                     subtitle,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          inherit: false,
                         ),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(begin: 0.2, end: 0, duration: 300.ms, delay: 200.ms),

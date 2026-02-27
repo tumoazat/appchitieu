@@ -45,6 +45,7 @@ class SettingsSection extends StatelessWidget {
                 title,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: Theme.of(context).colorScheme.secondary,
+                      inherit: false,
                     ),
               ),
             ),
@@ -114,6 +115,7 @@ class SettingsSection extends StatelessWidget {
                                 ?.copyWith(
                                   color:
                                       Theme.of(context).colorScheme.secondary,
+                                  inherit: false,
                                 ),
                           )
                         else

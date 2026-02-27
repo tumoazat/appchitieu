@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'app.dart';
+import 'providers/onboarding_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,13 +12,26 @@ void main() async {
   // Load environment variables (.env file)
   await dotenv.load(fileName: ".env");
   
+  // Initialize Firebase
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  } catch (_) {
-    // Firebase may already be initialized by native plugin
+  } catch (e) {
+    // Firebase may already be initialized or network issues on web
+    debugPrint('⚠️ Firebase init: $e');
   }
 
-  runApp(const ProviderScope(child: SmartExpenseApp()));
+  // Initialize onboarding state
+  final hasSeenOnboarding = await initializeOnboardingState();
+  print('🟢 Main: Onboarding initialized = $hasSeenOnboarding');
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        onboardingStateProvider.overrideWith((ref) => hasSeenOnboarding),
+      ],
+      child: const SmartExpenseApp(),
+    ),
+  );
 }
