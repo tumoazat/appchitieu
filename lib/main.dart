@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'app.dart';
 import 'providers/onboarding_provider.dart';
+import 'core/services/crash_reporting_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +26,9 @@ void main() async {
   // Initialize onboarding state
   final hasSeenOnboarding = await initializeOnboardingState();
   print('🟢 Main: Onboarding initialized = $hasSeenOnboarding');
+
+  // Khởi tạo Crashlytics để theo dõi lỗi
+  await CrashReportingService.initialize();
 
   runApp(
     ProviderScope(
