@@ -4,7 +4,6 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
-import 'providers/onboarding_provider.dart';
 
 class SmartExpenseApp extends ConsumerWidget {
   const SmartExpenseApp({super.key});
@@ -16,17 +15,13 @@ class SmartExpenseApp extends ConsumerWidget {
     
     // Watch auth state
     final authState = ref.watch(authStateProvider);
-    
-    // Watch onboarding state (cached value from initialization)
-    final hasSeenOnboardingCached = ref.watch(onboardingStateProvider) ?? false;
 
     return authState.when(
       data: (user) {
-        print('🟢 App: User = ${user?.email ?? 'null'}, hasSeenOnboarding = $hasSeenOnboardingCached');
+        print('🟢 App: User = ${user?.email ?? 'null'}');
         
         final router = AppRouter.createRouter(
           isAuthenticated: user != null,
-          hasSeenOnboarding: hasSeenOnboardingCached,
         );
 
         return MaterialApp.router(

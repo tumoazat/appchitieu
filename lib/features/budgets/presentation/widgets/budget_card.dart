@@ -50,7 +50,6 @@ class BudgetCard extends StatelessWidget {
                     category?.name ?? 'Danh mục',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          inherit: false,
                         ),
                   ),
                 ),
@@ -62,7 +61,6 @@ class BudgetCard extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: progress.statusColor,
                             fontWeight: FontWeight.bold,
-                            inherit: false,
                           ),
                     ),
                     Text(
@@ -72,7 +70,6 @@ class BudgetCard extends StatelessWidget {
                                 .colorScheme
                                 .onSurface
                                 .withOpacity(0.5),
-                            inherit: false,
                           ),
                     ),
                   ],

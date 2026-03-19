@@ -9,7 +9,7 @@ class AppTypography {
       fontWeight: FontWeight.bold,
       letterSpacing: -0.5,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   static TextStyle displayMedium(BuildContext context) {
@@ -18,7 +18,7 @@ class AppTypography {
       fontWeight: FontWeight.bold,
       letterSpacing: -0.3,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   // Headline styles - for screen titles and section headers
@@ -28,7 +28,7 @@ class AppTypography {
       fontWeight: FontWeight.w600,
       letterSpacing: -0.2,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   static TextStyle headlineMedium(BuildContext context) {
@@ -37,7 +37,7 @@ class AppTypography {
       fontWeight: FontWeight.w600,
       letterSpacing: -0.15,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   // Title styles - for card titles and list items
@@ -47,7 +47,7 @@ class AppTypography {
       fontWeight: FontWeight.w600,
       letterSpacing: 0,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   static TextStyle titleMedium(BuildContext context) {
@@ -56,7 +56,7 @@ class AppTypography {
       fontWeight: FontWeight.w500,
       letterSpacing: 0.1,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   static TextStyle titleSmall(BuildContext context) {
@@ -65,7 +65,7 @@ class AppTypography {
       fontWeight: FontWeight.w500,
       letterSpacing: 0.1,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   // Body styles - for general text content
@@ -75,7 +75,7 @@ class AppTypography {
       fontWeight: FontWeight.w400,
       letterSpacing: 0.15,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   static TextStyle bodyMedium(BuildContext context) {
@@ -84,7 +84,7 @@ class AppTypography {
       fontWeight: FontWeight.w400,
       letterSpacing: 0.25,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   static TextStyle bodySmall(BuildContext context) {
@@ -93,7 +93,7 @@ class AppTypography {
       fontWeight: FontWeight.w400,
       letterSpacing: 0.4,
       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-    ).copyWith(inherit: false);
+    );
   }
 
   // Label styles - for buttons and small UI elements
@@ -103,7 +103,7 @@ class AppTypography {
       fontWeight: FontWeight.w500,
       letterSpacing: 0.1,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   static TextStyle labelMedium(BuildContext context) {
@@ -112,7 +112,7 @@ class AppTypography {
       fontWeight: FontWeight.w500,
       letterSpacing: 0.5,
       color: Theme.of(context).colorScheme.onSurface,
-    ).copyWith(inherit: false);
+    );
   }
 
   static TextStyle labelSmall(BuildContext context) {
@@ -121,6 +121,6 @@ class AppTypography {
       fontWeight: FontWeight.w500,
       letterSpacing: 0.5,
       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-    ).copyWith(inherit: false);
+    );
   }
 }

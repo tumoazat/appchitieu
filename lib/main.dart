@@ -4,7 +4,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'app.dart';
-import 'providers/onboarding_provider.dart';
 import 'core/services/crash_reporting_service.dart';
 
 void main() async {
@@ -23,19 +22,12 @@ void main() async {
     debugPrint('⚠️ Firebase init: $e');
   }
 
-  // Initialize onboarding state
-  final hasSeenOnboarding = await initializeOnboardingState();
-  print('🟢 Main: Onboarding initialized = $hasSeenOnboarding');
-
   // Khởi tạo Crashlytics để theo dõi lỗi
   await CrashReportingService.initialize();
 
   runApp(
-    ProviderScope(
-      overrides: [
-        onboardingStateProvider.overrideWith((ref) => hasSeenOnboarding),
-      ],
-      child: const SmartExpenseApp(),
+    const ProviderScope(
+      child: SmartExpenseApp(),
     ),
   );
 }

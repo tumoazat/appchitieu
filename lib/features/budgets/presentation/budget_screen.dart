@@ -209,7 +209,6 @@ class _ExceededAlert extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: const Color(0xFFF44336),
                     fontWeight: FontWeight.w600,
-                    inherit: false,
                   ),
             ),
           ),

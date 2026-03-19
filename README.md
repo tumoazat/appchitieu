@@ -1,4 +1,4 @@
-# Smart Expense - Personal Finance Manager with AI 💰
+ Smart Expense - Personal Finance Manager with AI 💰
 
 Ứng dụng quản lý tài chính cá nhân thông minh với phân tích AI được xây dựng bằng Flutter.
 
