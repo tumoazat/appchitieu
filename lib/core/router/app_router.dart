@@ -12,6 +12,10 @@ import '../../presentation/transactions/search_screen.dart';
 import '../../presentation/settings/settings_screen.dart';
 import '../../features/gamification/screens/achievements_screen.dart';
 import '../../features/ocr/ocr_scan_screen.dart';
+import '../../presentation/transactions/screens/receipt_camera_screen.dart';
+import '../../presentation/statistics/screens/geo_location_analytics_screen.dart';
+import '../../presentation/transactions/screens/transaction_map_screen.dart';
+import '../../presentation/transactions/screens/voice_input_screen.dart';
 
 class AppRouter {
   static const String login = '/login';
@@ -26,6 +30,10 @@ class AppRouter {
   static const String settings = '/settings';
   static const String achievements = '/achievements';
   static const String ocrScan = '/ocr-scan';
+  static const String receiptCamera = '/receipt-camera';
+  static const String geoAnalytics = '/geo-analytics';
+  static const String transactionMap = '/transaction-map';
+  static const String voiceInput = '/voice-input';
 
   // Create router configuration
   static GoRouter createRouter({
@@ -73,6 +81,30 @@ class AppRouter {
         GoRoute(
           path: ocrScan,
           builder: (context, state) => const OcrScanScreen(),
+        ),
+
+        // Receipt Camera (Camera + OCR)
+        GoRoute(
+          path: receiptCamera,
+          builder: (context, state) => const ReceiptCameraScreen(),
+        ),
+
+        // Geo-Location Analytics
+        GoRoute(
+          path: geoAnalytics,
+          builder: (context, state) => const GeoLocationAnalyticsScreen(),
+        ),
+
+        // Transaction Map (Free Map with flutter_map)
+        GoRoute(
+          path: transactionMap,
+          builder: (context, state) => const TransactionMapScreen(),
+        ),
+
+        // Voice Input
+        GoRoute(
+          path: voiceInput,
+          builder: (context, state) => const VoiceInputScreen(),
         ),
 
         // Main app with bottom navigation shell

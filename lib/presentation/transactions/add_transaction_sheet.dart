@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import '../../data/models/transaction_model.dart';
 import '../../core/constants/category_data.dart';
@@ -13,6 +15,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../features/ai_categorization/application/categorization_notifier.dart';
 import '../shared/gradient_button.dart';
+import '../../core/router/app_router.dart';
+import '../../core/services/geo_location_service.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
   final TransactionModel? editTransaction;
@@ -298,6 +302,113 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                     ),
                   
                   const SizedBox(height: 24),
+                  
+                  // Quick action buttons for new features
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            // Camera OCR button
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  final result = await context.push(AppRouter.receiptCamera);
+                                  if (result != null && result is Map<String, dynamic>) {
+                                    setState(() {
+                                      _amount = result['amount'] ?? _amount;
+                                      if (result['category'] != null) {
+                                        final cat = CategoryModel.getCategoriesByType('expense').firstWhere(
+                                          (c) => c.name == result['category'],
+                                          orElse: () => CategoryModel.getCategoriesByType('expense').first,
+                                        );
+                                        _categoryId = cat.id;
+                                      }
+                                      if (result['description'] != null) {
+                                        _noteController.text = result['description'];
+                                      }
+                                    });
+                                  }
+                                },
+                                icon: const Icon(Icons.camera_alt, size: 18),
+                                label: const Text('Chụp', style: TextStyle(fontSize: 12)),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            
+                            // Voice input button
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  final result = await context.push(AppRouter.voiceInput);
+                                  if (result != null && result is Map<String, dynamic>) {
+                                    setState(() {
+                                      _amount = result['amount'] ?? _amount;
+                                      if (result['category'] != null) {
+                                        final cat = CategoryModel.getCategoriesByType('expense').firstWhere(
+                                          (c) => c.name == result['category'],
+                                          orElse: () => CategoryModel.getCategoriesByType('expense').first,
+                                        );
+                                        _categoryId = cat.id;
+                                      }
+                                      if (result['description'] != null) {
+                                        _noteController.text = result['description'];
+                                      }
+                                    });
+                                  }
+                                },
+                                icon: const Icon(Icons.mic, size: 18),
+                                label: const Text('Giọng nói', style: TextStyle(fontSize: 12)),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            // Geo analytics button
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () => context.push(AppRouter.geoAnalytics),
+                                icon: const Icon(Icons.assessment, size: 18),
+                                label: const Text('Thống kê', style: TextStyle(fontSize: 12)),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  backgroundColor: Colors.teal,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            
+                            // Transaction map button
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () => context.push(AppRouter.transactionMap),
+                                icon: const Icon(Icons.map, size: 18),
+                                label: const Text('Bản đồ', style: TextStyle(fontSize: 12)),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  backgroundColor: Colors.deepOrange,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -459,6 +570,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
         await ref.read(transactionRepositoryProvider).updateTransaction(updatedTransaction);
       } else {
+        // Get location BEFORE creating transaction
+        debugPrint('📍 Requesting location before transaction creation...');
+        final position = await GeoLocationService().getCurrentLocation();
+        debugPrint('📍 Location result: $position');
+
         // Create new transaction
         final transaction = TransactionModel(
           id: const Uuid().v4(),
@@ -471,7 +587,28 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
           createdAt: DateTime.now(),
         );
 
-        await ref.read(transactionRepositoryProvider).addTransaction(transaction);
+        // Get the actual Firestore document ID
+        final firestoreId = await ref.read(transactionRepositoryProvider).addTransaction(transaction);
+        debugPrint('✅ Transaction created with ID: $firestoreId');
+
+        // Add location data to the transaction if we have location
+        if (position != null) {
+          try {
+            debugPrint('📌 Adding location to transaction: $firestoreId');
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .collection('transactions')
+                .doc(firestoreId)
+                .update({
+              'location': GeoPoint(position.latitude, position.longitude),
+              'address': '${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)}',
+            });
+            debugPrint('✅ Location added successfully');
+          } catch (e) {
+            debugPrint('⚠️ Failed to add location: $e');
+          }
+        }
 
         // Add notification
         final category = CategoryModel.findById(_categoryId!);
